@@ -278,10 +278,15 @@
             
           const [rejectModal, setRejectModal] = useState(null);
           const [rejectReason, setRejectReason] = useState("");
+          const [deductionAmount, setDeductionAmount] = useState(0); // New state for flexible points
+          
           const [newGoal, setNewGoal] = useState(DEFAULT_GOAL);
           const [viewingHistoryLog, setViewingHistoryLog] = useState(null); 
           const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
           const [expandedSubjects, setExpandedSubjects] = useState({});
+          
+          // Added for student log tracking
+          const [showStudentLog, setShowStudentLog] = useState(false);
 
           useEffect(() => {
             const initAuth = async () => {
@@ -407,61 +412,42 @@
           const handleDownloadPDF = () => {
              try {
                 const doc = new jsPDF();
-                
-                // --- PDF Header ---
                 doc.setFont("Helvetica", "bold");
                 doc.setFontSize(18);
-                doc.text(STUDENT_NAME, 20, 20); // Student Name
-                
+                doc.text(STUDENT_NAME, 20, 20); 
                 doc.setFontSize(12);
                 doc.setFont("Helvetica", "normal");
-                doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 30); // Current Date
-                
+                doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 30);
                 doc.setLineWidth(0.5);
                 doc.line(20, 35, 190, 35);
-                
-                // --- Content ---
                 doc.setFontSize(14);
                 doc.setFont("Helvetica", "bold");
                 doc.text("Daily Progress Report", 20, 45);
-                
                 let yPos = 55;
-                
-                // Summary Stats
                 doc.setFontSize(12);
                 doc.setFont("Helvetica", "normal");
                 doc.text(`Total Points Earned: ${data.points || 0}`, 20, yPos);
                 yPos += 10;
                 doc.text(`Daily Goal: ${data.dailyGoal || DEFAULT_GOAL}`, 20, yPos);
                 yPos += 15;
-                
-                // Completed Tasks
                 doc.setFont("Helvetica", "bold");
                 doc.text("Completed Activities:", 20, yPos);
                 yPos += 10;
-                
                 doc.setFont("Helvetica", "normal");
-                
-                // Filter logs for today
                 const logs = data.activityLog || [];
                 const completedLogs = logs.filter(l => l.type === 'completion').reverse();
-                
                 if (completedLogs.length === 0) {
                     doc.text("No activities completed yet today.", 25, yPos);
                 } else {
                     completedLogs.forEach((log) => {
-                        if (yPos > 270) { // New page if near bottom
-                            doc.addPage();
-                            yPos = 20;
-                        }
+                        if (yPos > 270) { doc.addPage(); yPos = 20; }
                         const subName = SUBJECTS.find(s => s.id === log.subject)?.label || "Activity";
                         doc.text(`• ${log.time} - ${subName}: ${log.task} (+${log.points})`, 25, yPos);
                         yPos += 8;
                     });
                 }
-                
                 doc.save(`${STUDENT_NAME.replace(' ', '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
-                triggerConfetti(); // Reward for downloading!
+                triggerConfetti(); 
              } catch (e) {
                  console.error("PDF Error", e);
                  alert("Could not generate PDF.");
@@ -491,20 +477,17 @@
           const toggleTaskVisibility = async (subId, taskName) => {
               if(!user) return;
               const key = getTaskKey(subId, taskName);
-                
               let currentVisible = data.visibleTasks;
               if (!currentVisible) {
                   currentVisible = [];
                   SUBJECTS.forEach(s => s.tasks.forEach(t => currentVisible.push(getTaskKey(s.id, t))));
               }
-
               let newVisible;
               if (currentVisible.includes(key)) {
                   newVisible = currentVisible.filter(k => k !== key);
               } else {
                   newVisible = [...currentVisible, key];
               }
-
               const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
               await updateDoc(logRef, { visibleTasks: newVisible });
           };
@@ -512,14 +495,10 @@
           const completeTask = async (subId, taskName, pointValue) => {
             if (!user) return;
             const key = getTaskKey(subId, taskName);
-            
             if (data[key]) return; 
-
             const newPoints = (data.points || 0) + pointValue;
             const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
-            
             const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
             const logEntry = {
                 type: 'completion',
                 task: taskName,
@@ -528,9 +507,7 @@
                 time: timeString,
                 id: Date.now() 
             };
-
             const currentLog = data.activityLog || [];
-
             await updateDoc(logRef, { 
                 [key]: true, 
                 [`${key}_flagged`]: deleteField(),
@@ -538,30 +515,24 @@
                 [`${key}_time`]: timeString,
                 activityLog: [...currentLog, logEntry]
             });
-            
             triggerConfetti();
-            setTimeout(() => {
-                setFocusTask(null);
-            }, 1000);
+            setTimeout(() => { setFocusTask(null); }, 1000);
           };
 
           const flagTask = async (subId, taskName) => {
               if(!user) return;
               const key = getTaskKey(subId, taskName);
               const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
-              
               await updateDoc(logRef, {
                   [`${key}_flagged`]: true,
                   [key]: false 
               });
-              
               setFocusTask(null); 
           };
 
           const resolveFlag = async (subId, taskName, points, action) => {
               const key = getTaskKey(subId, taskName);
               const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
-
               if (action === 'approve') {
                   const newPoints = (data.points || 0) + points;
                   const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -574,7 +545,6 @@
                     id: Date.now()
                   };
                   const currentLog = data.activityLog || [];
-                  
                   await updateDoc(logRef, {
                       [key]: true,
                       [`${key}_flagged`]: deleteField(),
@@ -583,20 +553,16 @@
                       activityLog: [...currentLog, logEntry]
                   });
               } else {
-                  await updateDoc(logRef, {
-                      [`${key}_flagged`]: deleteField()
-                  });
+                  await updateDoc(logRef, { [`${key}_flagged`]: deleteField() });
               }
           };
 
           const undoTask = async (subId, taskName, pointValue) => {
               if (!user) return;
               if(!confirm("Did you click this by mistake? This will undo the points.")) return;
-
               const key = getTaskKey(subId, taskName);
               const newPoints = Math.max(0, (data.points || 0) - pointValue);
               const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
-
               let logRemoved = false;
               const currentLog = data.activityLog || [];
               const newLog = [...currentLog].reverse().filter(entry => {
@@ -606,7 +572,6 @@
                   }
                   return true;
               }).reverse();
-
               await updateDoc(logRef, {
                   [key]: false,
                   points: newPoints,
@@ -617,24 +582,26 @@
 
           const handleRejectTask = async () => {
             if (!user || !rejectModal) return;
-            
             if (!rejectReason.trim()) {
-                alert("Please enter a reason for the deduction.");
+                alert("Please enter a reason/feedback for the rejection.");
                 return;
             }
 
-            const { subId, taskName, points } = rejectModal;
+            const { subId, taskName } = rejectModal;
             const key = getTaskKey(subId, taskName);
             const subjectLabel = SUBJECTS.find(s => s.id === subId)?.label || "Assignment";
             
-            const newPoints = Math.max(0, (data.points || 0) - points);
+            // Allow user defined deduction (can be 0 or more)
+            const deduction = parseInt(deductionAmount) || 0;
+            const newPoints = (data.points || 0) - deduction;
+            
             const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
             
             const logEntry = {
                 type: 'deduction',
                 task: taskName,
                 subject: subId,
-                points: -points,
+                points: -deduction,
                 reason: rejectReason,
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             };
@@ -643,12 +610,13 @@
 
             await updateDoc(logRef, { 
                 [key]: false, 
+                [`${key}_flagged`]: deleteField(), // Ensure flag is removed if present
                 points: newPoints,
                 activityLog: [...currentLog, logEntry],
                 latestAlert: {
                     id: Date.now(),
                     type: 'deduction',
-                    amount: -points,
+                    amount: -deduction,
                     message: rejectReason,
                     task: taskName,
                     subjectId: subId,
@@ -659,10 +627,11 @@
 
             setRejectModal(null);
             setRejectReason("");
+            setDeductionAmount(0);
           };
 
           const handlePinSubmit = () => {
-            const correctPin = settings.parent_pin || "1564";
+            const correctPin = settings.parent_pin || "1234";
             if (pinInput === correctPin) {
               setViewMode('parent');
               setPinInput("");
@@ -679,146 +648,43 @@
           const renderFocusContent = () => {
               if (!focusTask) return null;
               const t = focusTask.name.toLowerCase();
-
               if (t.includes("check in")) {
-                  return (
-                      <div className="w-full bg-blue-50 border-2 border-blue-200 rounded-3xl p-8 text-center space-y-4">
-                          <div className="flex justify-center mb-2"><Clock className="w-16 h-16 text-blue-500" /></div>
-                          <h3 className="text-2xl font-black text-blue-900">Attendance Check</h3>
-                          <p className="text-blue-700 font-medium text-xl">1. Open the class website.<br/>2. Click "Check In".<br/>3. Come back here.</p>
-                      </div>
-                  );
+                  return (<div className="w-full bg-blue-50 border-2 border-blue-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><Clock className="w-16 h-16 text-blue-500" /></div><h3 className="text-2xl font-black text-blue-900">Attendance Check</h3><p className="text-blue-700 font-medium text-xl">1. Open the class website.<br/>2. Click "Check In".<br/>3. Come back here.</p></div>);
               }
-
-              // --- CUSTOM DIRECTIONS ---
-              // 1. Math Specific Lesson
               if (t.includes("lesson") && focusTask.subId === 'math') {
-                  return (
-                      <div className="w-full bg-blue-50 border-2 border-blue-200 rounded-3xl p-8 text-center space-y-4">
-                          <div className="flex justify-center mb-2"><Calculator className="w-16 h-16 text-blue-600" /></div>
-                          <h3 className="text-2xl font-black text-blue-900">Math Lesson Time</h3>
-                          <p className="text-blue-700 font-medium text-xl">Get your whiteboard and marker.<br/>Solve the example problems with the video.</p>
-                      </div>
-                  );
+                  return (<div className="w-full bg-blue-50 border-2 border-blue-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><Calculator className="w-16 h-16 text-blue-600" /></div><h3 className="text-2xl font-black text-blue-900">Math Lesson Time</h3><p className="text-blue-700 font-medium text-xl">Get your whiteboard and marker.<br/>Solve the example problems with the video.</p></div>);
               }
-
-              // 2. Science Specific Lesson
               if (t.includes("experiment") || (t.includes("lesson") && focusTask.subId === 'science')) {
-                  return (
-                      <div className="w-full bg-emerald-50 border-2 border-emerald-200 rounded-3xl p-8 text-center space-y-4">
-                          <div className="flex justify-center mb-2"><FlaskConical className="w-16 h-16 text-emerald-600" /></div>
-                          <h3 className="text-2xl font-black text-emerald-900">Science Experiment</h3>
-                          <p className="text-emerald-700 font-medium text-xl">Watch the experiment video closely.<br/>Write down what happens.</p>
-                      </div>
-                  );
+                  return (<div className="w-full bg-emerald-50 border-2 border-emerald-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><FlaskConical className="w-16 h-16 text-emerald-600" /></div><h3 className="text-2xl font-black text-emerald-900">Science Experiment</h3><p className="text-emerald-700 font-medium text-xl">Watch the experiment video closely.<br/>Write down what happens.</p></div>);
               }
-
-              // 3. Social Studies Specific Lesson
               if (t.includes("map") || (t.includes("lesson") && focusTask.subId === 'social')) {
-                  return (
-                      <div className="w-full bg-purple-50 border-2 border-purple-200 rounded-3xl p-8 text-center space-y-4">
-                          <div className="flex justify-center mb-2"><Globe2 className="w-16 h-16 text-purple-600" /></div>
-                          <h3 className="text-2xl font-black text-purple-900">Social Studies</h3>
-                          <p className="text-purple-700 font-medium text-xl">Look at the map activity.<br/>Find all the locations listed.</p>
-                      </div>
-                  );
+                  return (<div className="w-full bg-purple-50 border-2 border-purple-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><Globe2 className="w-16 h-16 text-purple-600" /></div><h3 className="text-2xl font-black text-purple-900">Social Studies</h3><p className="text-purple-700 font-medium text-xl">Look at the map activity.<br/>Find all the locations listed.</p></div>);
               }
-
-              // 4. Generic Video/Lesson
               if (t.includes("video") || t.includes("lesson")) {
-                  return (
-                      <div className="w-full bg-indigo-50 border-2 border-indigo-200 rounded-3xl p-8 text-center space-y-4">
-                          <div className="flex justify-center mb-2"><PlayCircle className="w-16 h-16 text-indigo-500" /></div>
-                          <h3 className="text-2xl font-black text-indigo-900">Review the Lesson</h3>
-                          <p className="text-indigo-700 font-medium text-xl">Pay attention.<br/>Use headphones if you need to.</p>
-                      </div>
-                  );
+                  return (<div className="w-full bg-indigo-50 border-2 border-indigo-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><PlayCircle className="w-16 h-16 text-indigo-500" /></div><h3 className="text-2xl font-black text-indigo-900">Review the Lesson</h3><p className="text-indigo-700 font-medium text-xl">Pay attention.<br/>Use headphones if you need to.</p></div>);
               }
-
-              // 5. Hatchet (Reading)
               if (t.includes("hatchet")) {
-                  return (
-                      <div className="w-full bg-green-50 border-2 border-green-200 rounded-3xl p-8 text-center space-y-4">
-                           <div className="flex justify-center mb-2"><BookOpen className="w-16 h-16 text-green-600" /></div>
-                           <h3 className="text-2xl font-black text-green-900">Reading Time</h3>
-                           <p className="text-green-700 font-medium text-xl">Listen to Chapter 14.<br/>Pay attention.</p>
-                      </div>
-                  );
+                  return (<div className="w-full bg-green-50 border-2 border-green-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><BookOpen className="w-16 h-16 text-green-600" /></div><h3 className="text-2xl font-black text-green-900">Reading Time</h3><p className="text-green-700 font-medium text-xl">Listen to Chapter 14.<br/>Pay attention.</p></div>);
               }
-
-              // 6. Recap
               if (t.includes("recap")) {
-                  return (
-                      <div className="w-full bg-purple-50 border-2 border-purple-200 rounded-3xl p-8 text-center space-y-4">
-                           <div className="flex justify-center mb-2"><BookOpen className="w-16 h-16 text-purple-500" /></div>
-                           <h3 className="text-2xl font-black text-purple-900">Quick Review</h3>
-                           <p className="text-purple-700 font-medium text-xl">Review the recap.<br/>Take notes if needed.</p>
-                      </div>
-                  );
+                  return (<div className="w-full bg-purple-50 border-2 border-purple-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><BookOpen className="w-16 h-16 text-purple-500" /></div><h3 className="text-2xl font-black text-purple-900">Quick Review</h3><p className="text-purple-700 font-medium text-xl">Review the recap.<br/>Take notes if needed.</p></div>);
               }
-
-              // 7. Vocabulary
               if (t.includes("vocabulary")) {
-                  return (
-                      <div className="w-full bg-yellow-50 border-2 border-yellow-200 rounded-3xl p-8 text-center space-y-4">
-                           <div className="flex justify-center mb-2"><BookOpen className="w-16 h-16 text-yellow-600" /></div>
-                           <h3 className="text-2xl font-black text-yellow-900">Word Work</h3>
-                           <p className="text-yellow-700 font-medium text-xl">Review your vocabulary words.<br/>Study the root and affixes.</p>
-                      </div>
-                  );
+                  return (<div className="w-full bg-yellow-50 border-2 border-yellow-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><BookOpen className="w-16 h-16 text-yellow-600" /></div><h3 className="text-2xl font-black text-yellow-900">Word Work</h3><p className="text-yellow-700 font-medium text-xl">Review your vocabulary words.<br/>Study the root and affixes.</p></div>);
               }
-
-              // 8. Math Game
               if (t.includes("math game")) {
-                  return (
-                      <div className="w-full bg-pink-50 border-2 border-pink-200 rounded-3xl p-8 text-center space-y-4">
-                           <div className="flex justify-center mb-2"><Gamepad2 className="w-16 h-16 text-pink-500" /></div>
-                           <h3 className="text-2xl font-black text-pink-900">Play Time!</h3>
-                           <p className="text-pink-700 font-medium text-xl">Play the math game for 10 minutes.<br/>Try to beat your high score!</p>
-                      </div>
-                  );
+                  return (<div className="w-full bg-pink-50 border-2 border-pink-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><Gamepad2 className="w-16 h-16 text-pink-500" /></div><h3 className="text-2xl font-black text-pink-900">Play Time!</h3><p className="text-pink-700 font-medium text-xl">Play the math game for 10 minutes.<br/>Try to beat your high score!</p></div>);
               }
-
-              // 9. Upload
               if (t.includes("upload")) {
-                  return (
-                      <div className="w-full bg-teal-50 border-2 border-teal-200 rounded-3xl p-8 text-center space-y-4">
-                           <div className="flex justify-center mb-2"><ClipboardCheck className="w-16 h-16 text-teal-600" /></div>
-                           <h3 className="text-2xl font-black text-teal-900">Camera Time</h3>
-                           <p className="text-teal-700 font-medium text-xl">Submit your work.<br/>Upload via File Manager.</p>
-                      </div>
-                  );
+                  return (<div className="w-full bg-teal-50 border-2 border-teal-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><ClipboardCheck className="w-16 h-16 text-teal-600" /></div><h3 className="text-2xl font-black text-teal-900">Camera Time</h3><p className="text-teal-700 font-medium text-xl">Submit your work.<br/>Upload via File Manager.</p></div>);
               }
-
-              // 10. Mark as Done
               if (t.includes("mark as done")) {
-                  return (
-                      <div className="w-full bg-blue-50 border-2 border-blue-200 rounded-3xl p-8 text-center space-y-4">
-                           <div className="flex justify-center mb-2"><CheckCircle2 className="w-16 h-16 text-blue-600" /></div>
-                           <h3 className="text-2xl font-black text-blue-900">Almost There!</h3>
-                           <p className="text-blue-700 font-medium text-xl">Did you finish everything?<br/>select "Mark as Done" in Wix.</p>
-                      </div>
-                  );
+                  return (<div className="w-full bg-blue-50 border-2 border-blue-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><CheckCircle2 className="w-16 h-16 text-blue-600" /></div><h3 className="text-2xl font-black text-blue-900">Almost There!</h3><p className="text-blue-700 font-medium text-xl">Did you finish everything?<br/>select "Mark as Done" in Wix.</p></div>);
               }
-             // 11. Math Specific Assignment 
               if (t.includes("assignment") && focusTask.subId === 'math') {
-                  return (
-                      <div className="w-full bg-blue-50 border-2 border-blue-200 rounded-3xl p-8 text-center space-y-4">
-                          <div className="flex justify-center mb-2"><Calculator className="w-16 h-16 text-blue-600" /></div>
-                          <h3 className="text-2xl font-black text-blue-900">Math Lesson Time</h3>
-                          <p className="text-blue-700 font-medium text-xl">Grab a notebook to show your work.<br/>Solve the math problems.</p>
-                      </div>
-                  );
+                  return (<div className="w-full bg-blue-50 border-2 border-blue-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><Calculator className="w-16 h-16 text-blue-600" /></div><h3 className="text-2xl font-black text-blue-900">Math Lesson Time</h3><p className="text-blue-700 font-medium text-xl">Grab a notebook to show your work.<br/>Solve the math problems.</p></div>);
              }
-              // --- END CUSTOM DIRECTIONS ---
-
-              return (
-                  <div className="w-full bg-orange-50 border-2 border-orange-200 rounded-3xl p-8 text-center space-y-4">
-                       <div className="flex justify-center mb-2"><ClipboardCheck className="w-16 h-16 text-orange-500" /></div>
-                       <h3 className="text-2xl font-black text-orange-900">Let's Work!</h3>
-                       <p className="text-orange-700 font-medium text-xl">Focus on this one task.<br/>Take your time.</p>
-                  </div>
-              );
+              return (<div className="w-full bg-orange-50 border-2 border-orange-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><ClipboardCheck className="w-16 h-16 text-orange-500" /></div><h3 className="text-2xl font-black text-orange-900">Let's Work!</h3><p className="text-orange-700 font-medium text-xl">Focus on this one task.<br/>Take your time.</p></div>);
           };
 
           if (loading || authError) {
@@ -903,50 +769,6 @@
                   </div>
 
                   <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-                      <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center gap-3">
-                        <ScrollText className="w-5 h-5 text-blue-600" />
-                        <h2 className="text-lg font-black text-slate-700">Today's Live Activity</h2>
-                      </div>
-                      <div className="max-h-80 overflow-y-auto p-4 space-y-4 bg-slate-50"> 
-                        {data.activityLog && data.activityLog.length > 0 ? (
-                            SUBJECTS.map(sub => {
-                                const subLogs = data.activityLog.filter(l => l.subject === sub.id).reverse();
-                                if (subLogs.length === 0) return null;
-
-                                return (
-                                    <div key={sub.id} className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm">
-                                        <div className="flex items-center gap-2 mb-3 border-b border-slate-50 pb-2">
-                                            <div className={`p-1.5 rounded-lg bg-gradient-to-br ${sub.color} text-white`}>
-                                                {React.cloneElement(sub.icon, { className: "w-3 h-3" })}
-                                            </div>
-                                            <h4 className="font-bold text-slate-700 text-xs uppercase tracking-wider">{sub.label}</h4>
-                                        </div>
-                                        <div className="space-y-2">
-                                            {subLogs.map((entry, idx) => (
-                                                <div key={idx} className={`p-2 rounded-lg border-l-4 text-sm ${entry.type === 'deduction' ? 'bg-red-50 border-red-400' : 'bg-slate-50 border-green-400'}`}>
-                                                    <div className="flex justify-between items-start">
-                                                        <span className="font-bold text-slate-700">{entry.task}</span>
-                                                        <span className="text-[10px] font-mono text-slate-400">{entry.time}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 mt-0.5">
-                                                        <span className={`text-xs font-black ${entry.type === 'deduction' ? 'text-red-600' : 'text-green-600'}`}>
-                                                            {entry.points > 0 ? '+' : ''}{entry.points} PTS
-                                                        </span>
-                                                        {entry.reason && <span className="text-xs text-slate-500 italic">- "{entry.reason}"</span>}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                );
-                            })
-                        ) : (
-                            <p className="text-center text-slate-400 text-sm py-4">No activity yet today.</p>
-                        )}
-                      </div>
-                  </div>
-
-                  <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
                     <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center gap-3">
                       <ShieldCheck className="w-5 h-5 text-green-600" />
                       <div>
@@ -1026,7 +848,7 @@
                                     
                                     <div className="flex items-center justify-end gap-2 border-t border-slate-100/50 pt-2 mt-auto">
                                         {isDone && (
-                                            <button onClick={() => setRejectModal({ subId: sub.id, taskName: task, points })} className="bg-red-100 hover:bg-red-200 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors">
+                                            <button onClick={() => { setRejectModal({ subId: sub.id, taskName: task }); setDeductionAmount(points); }} className="bg-red-100 hover:bg-red-200 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors">
                                                 <ThumbsDown className="w-3 h-3" /> Reject
                                             </button>
                                         )}
@@ -1036,8 +858,8 @@
                                                 <button onClick={() => resolveFlag(sub.id, task, points, 'approve')} className="bg-green-100 text-green-700 p-2 rounded-lg hover:bg-green-200" title="Mark Done (Award Points)">
                                                     <Check className="w-4 h-4" />
                                                 </button>
-                                                <button onClick={() => resolveFlag(sub.id, task, points, 'reset')} className="bg-slate-100 text-slate-600 p-2 rounded-lg hover:bg-slate-200" title="Reset (Try Again)">
-                                                    <RotateCcw className="w-4 h-4" />
+                                                <button onClick={() => { setRejectModal({ subId: sub.id, taskName: task }); setDeductionAmount(0); }} className="bg-red-100 text-red-600 p-2 rounded-lg hover:bg-red-200" title="Reject Help Request">
+                                                    <ThumbsDown className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         )}
@@ -1192,13 +1014,31 @@
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                         <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setRejectModal(null)} />
                         <div className="bg-white rounded-2xl w-full max-w-sm p-6 relative z-10 shadow-2xl animate-in fade-in zoom-in duration-200">
-                            <h3 className="text-xl font-black text-slate-800 mb-2">Reject Assignment?</h3>
-                            <p className="text-sm text-slate-500 mb-4">This will mark <strong>{rejectModal.taskName}</strong> as incomplete and deduct <strong>{rejectModal.points} points</strong>.</p>
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Reason (Required)</label>
-                            <input type="text" autoFocus placeholder="e.g. Incomplete work, didn't watch video..." value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} className="w-full p-3 border border-slate-200 rounded-xl mb-6 outline-none focus:border-red-400"/>
+                            <h3 className="text-xl font-black text-slate-800 mb-2">Reject: {rejectModal.taskName}</h3>
+                            <p className="text-sm text-slate-500 mb-4">You are returning this task. Set penalty points and give feedback.</p>
+                            
+                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Points to Deduct</label>
+                            <input 
+                                type="number" 
+                                min="0" 
+                                value={deductionAmount} 
+                                onChange={(e) => setDeductionAmount(e.target.value)} 
+                                className="w-full p-3 border border-slate-200 rounded-xl mb-4 outline-none focus:border-red-400 font-bold text-lg"
+                            />
+
+                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Reason / Feedback (Required)</label>
+                            <input 
+                                type="text" 
+                                autoFocus 
+                                placeholder="e.g. Incomplete work, didn't follow instructions..." 
+                                value={rejectReason} 
+                                onChange={(e) => setRejectReason(e.target.value)} 
+                                className="w-full p-3 border border-slate-200 rounded-xl mb-6 outline-none focus:border-red-400"
+                            />
+                            
                             <div className="flex gap-3">
                                 <button onClick={() => setRejectModal(null)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200">Cancel</button>
-                                <button onClick={handleRejectTask} className="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 shadow-lg shadow-red-200">Confirm Deduction</button>
+                                <button onClick={handleRejectTask} className="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 shadow-lg shadow-red-200">Confirm Rejection</button>
                             </div>
                         </div>
                     </div>
@@ -1228,6 +1068,10 @@
                       <div className="flex items-center gap-2">
                            <button onClick={handleDownloadPDF} className="p-2 bg-indigo-50 text-indigo-600 rounded-lg shadow-sm border border-indigo-100 hover:scale-105 transition-transform" title="Download Report">
                              <FileDown className="w-5 h-5" />
+                           </button>
+                           
+                           <button onClick={() => setShowStudentLog(true)} className="p-2 bg-green-50 text-green-600 rounded-lg shadow-sm border border-green-100 hover:scale-105 transition-transform" title="My Log">
+                             <Clock className="w-5 h-5" />
                            </button>
 
                           <button onClick={() => setViewMode('pin_entry')} className="p-2 bg-white rounded-lg shadow-sm border border-slate-100 hover:scale-105 transition-transform">
@@ -1293,9 +1137,11 @@
 
                     {selectedSubject && (
                         <div className="animate-in fade-in zoom-in-95 duration-300">
-                            <button onClick={() => setSelectedSubject(null)} className="mb-4 flex items-center gap-2 text-slate-500 font-bold hover:text-slate-800 transition-colors bg-white px-4 py-2 rounded-full shadow-sm text-sm">
-                                <ArrowLeft className="w-4 h-4" /> Back to Dashboard
-                            </button>
+                            <div className="sticky top-20 z-30 mb-4">
+                                <button onClick={() => setSelectedSubject(null)} className="flex items-center gap-2 text-slate-700 font-black hover:text-slate-900 transition-colors bg-white/90 backdrop-blur border border-slate-200 px-4 py-3 rounded-2xl shadow-lg text-sm w-full sm:w-auto justify-center sm:justify-start">
+                                    <ArrowLeft className="w-5 h-5" /> Back to Dashboard
+                                </button>
+                            </div>
                             
                             <div className="bg-white rounded-[2rem] shadow-xl overflow-hidden border-2 border-slate-100 mx-auto">
                                 <div className={`p-6 bg-gradient-to-r ${selectedSubject.color}`}>
@@ -1409,6 +1255,63 @@
                       </div>
                   )}
 
+                  {showStudentLog && (
+                      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setShowStudentLog(false)} />
+                          <div className="bg-white rounded-3xl w-full max-w-lg p-6 relative z-10 shadow-2xl max-h-[85vh] overflow-hidden flex flex-col">
+                              <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+                                  <div className="flex items-center gap-3">
+                                      <div className="bg-green-100 p-2 rounded-xl text-green-600"><Clock className="w-6 h-6"/></div>
+                                      <div>
+                                          <h3 className="text-xl font-black text-slate-800">My Activity Log</h3>
+                                          <p className="text-xs text-slate-400 font-bold">{new Date(dateStr).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+                                      </div>
+                                  </div>
+                                  <button onClick={() => setShowStudentLog(false)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200"><X className="w-5 h-5"/></button>
+                              </div>
+                              <div className="overflow-y-auto flex-1 space-y-6 pr-2">
+                                  {SUBJECTS.map(sub => {
+                                      const subLogs = (data.activityLog || []).filter(l => l.subject === sub.id).reverse();
+                                      if (subLogs.length === 0) return null;
+                                      return (
+                                          <div key={sub.id}>
+                                              <div className="flex items-center gap-2 mb-2">
+                                                  <div className={`p-1.5 rounded-lg bg-gradient-to-br ${sub.color} text-slate-800`}>{React.cloneElement(sub.icon, { className: "w-4 h-4" })}</div>
+                                                  <h4 className="font-bold text-slate-700 text-sm uppercase">{sub.label}</h4>
+                                              </div>
+                                              <div className="space-y-2 pl-2 border-l-2 border-slate-100 ml-3">
+                                                  {subLogs.map((entry, idx) => (
+                                                      <div key={idx} className={`p-3 rounded-xl border-l-4 ml-2 text-sm ${entry.type === 'deduction' ? 'bg-red-50 border-red-400' : 'bg-green-50 border-green-400'}`}>
+                                                          <div className="flex justify-between items-start">
+                                                              <span className="font-bold text-slate-800">{entry.task}</span>
+                                                              <span className="text-[10px] font-mono text-slate-400">{entry.time}</span>
+                                                          </div>
+                                                          <div className="mt-1 flex flex-col gap-1">
+                                                              <span className={`text-xs font-black ${entry.type === 'deduction' ? 'text-red-600' : 'text-green-600'}`}>
+                                                                  {entry.points > 0 ? '+' : ''}{entry.points} Points
+                                                              </span>
+                                                              {entry.reason && (
+                                                                  <div className="bg-white/50 p-2 rounded-lg text-xs text-slate-600 italic border border-slate-100 mt-1">
+                                                                      "{entry.reason}"
+                                                                  </div>
+                                                              )}
+                                                          </div>
+                                                      </div>
+                                                  ))}
+                                              </div>
+                                          </div>
+                                      );
+                                  })}
+                                  {(!data.activityLog || data.activityLog.length === 0) && (
+                                      <div className="text-center py-10 text-slate-400">
+                                          <p>No activity recorded today.</p>
+                                      </div>
+                                  )}
+                              </div>
+                          </div>
+                      </div>
+                  )}
+
                   {alertPopup && (
                       <div className="fixed bottom-6 right-6 z-[60] max-w-sm w-full animate-in slide-in-from-right duration-500">
                           <div className="bg-white rounded-2xl shadow-2xl border-l-8 border-red-500 p-6 relative overflow-hidden">
@@ -1450,5 +1353,4 @@
         root.render(<App />);
     </script>
 </body>
-
 </html>
