@@ -216,15 +216,15 @@
         const CATEGORIES = [
            "Lesson",
            "Assignment",
-           "Video",
-           "Experiment",
-           "Writing Assignment",
            "Vocabulary",
+           "Math Problems",
+           "Video",
            "Review",
+           "Science Experiment",
+           "Essay",
+           "Journal Entry",
            "Quiz",
-           "Practice",
-           "Diagram",
-           "Map Activity"
+           "Writing Assignment"
         ];
 
         const POINTS_BY_CATEGORY = {
@@ -303,6 +303,7 @@
           // State for Task Creation in Modal
           const [newTaskSubject, setNewTaskSubject] = useState(null);
           const [newTaskCategory, setNewTaskCategory] = useState("Lesson");
+          const [newTaskTitle, setNewTaskTitle] = useState("");
           const [newTaskDesc, setNewTaskDesc] = useState("");
 
           useEffect(() => {
@@ -459,7 +460,8 @@
                            const isDone = data[task.id];
                            const status = isDone ? "[DONE]" : "[ ]";
                            const pts = calculatePoints(task.category);
-                           doc.text(`${status} ${task.category}: ${task.description} (${pts} pts)`, 25, yPos);
+                           const titleText = task.title ? `${task.title}: ` : "";
+                           doc.text(`${status} ${task.category}: ${titleText}${task.description} (${pts} pts)`, 25, yPos);
                            yPos += 6;
                        });
                        yPos += 5;
@@ -497,8 +499,8 @@
           // --- Task Management Functions ---
 
           const addTask = async () => {
-            if (!newTaskSubject || !newTaskDesc) {
-                alert("Please select a subject and type a description.");
+            if (!newTaskSubject || !newTaskTitle || !newTaskDesc) {
+                alert("Please select a subject and fill in title and description.");
                 return;
             }
             
@@ -511,6 +513,7 @@
             const newTask = {
                 id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
                 category: newTaskCategory,
+                title: newTaskTitle,
                 description: newTaskDesc,
                 subjectId: newTaskSubject
             };
@@ -521,7 +524,8 @@
 
             const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
             await updateDoc(logRef, { customTasks: updatedTasks });
-            setNewTaskDesc(""); // Clear input
+            setNewTaskTitle(""); // Clear title
+            setNewTaskDesc(""); // Clear desc
           };
 
           const deleteTask = async (subId, taskId) => {
@@ -560,7 +564,7 @@
             
             const logEntry = {
                 type: 'completion',
-                task: `${taskObj.category}: ${taskObj.description}`,
+                task: `${taskObj.category}: ${taskObj.title || taskObj.description}`,
                 subject: taskObj.subjectId,
                 points: pointValue,
                 time: timeString,
@@ -598,7 +602,7 @@
                   const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                   const logEntry = {
                     type: 'completion',
-                    task: `${taskObj.category}: ${taskObj.description}`,
+                    task: `${taskObj.category}: ${taskObj.title || taskObj.description}`,
                     subject: taskObj.subjectId,
                     points: points,
                     time: timeString + " (Resolved)",
@@ -633,7 +637,7 @@
             
             const logEntry = {
                 type: 'deduction',
-                task: `${taskObj.category}: ${taskObj.description}`,
+                task: `${taskObj.category}: ${taskObj.title || taskObj.description}`,
                 subject: taskObj.subjectId,
                 points: -deduction,
                 reason: rejectReason,
@@ -784,7 +788,6 @@
                         </div>
                       </div>
                       <div className="flex gap-2">
-                          <button onClick={() => setIsScheduleModalOpen(true)} className="bg-blue-100 text-blue-700 font-bold px-4 py-2 rounded-xl text-sm hover:bg-blue-200 flex items-center gap-1"><CalendarCheck className="w-4 h-4"/> Schedule</button>
                           <button onClick={updateDailyGoal} className="bg-slate-800 text-white font-bold px-4 py-2 rounded-xl text-sm">Save</button>
                       </div>
                     </div>
@@ -800,12 +803,51 @@
                       </div>
                   </div>
 
+                  {/* Task Creator - Now Main Component */}
+                  <div className="bg-blue-50 p-6 rounded-3xl border-2 border-blue-100 shadow-sm">
+                        <h4 className="font-bold text-blue-900 mb-4 flex items-center gap-2 text-lg">
+                            <div className="bg-blue-200 p-2 rounded-lg text-blue-700"><Plus className="w-5 h-5"/></div> 
+                            Add New Task to Schedule
+                        </h4>
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-1">Subject</label>
+                                    <select className="w-full p-4 rounded-2xl border border-blue-200 bg-white font-bold text-slate-700 outline-none shadow-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all" value={newTaskSubject || ""} onChange={(e) => setNewTaskSubject(e.target.value)}>
+                                        <option value="" disabled>Select Subject...</option>
+                                        {SUBJECTS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-1">Category</label>
+                                    <select className="w-full p-4 rounded-2xl border border-blue-200 bg-white text-sm font-bold text-slate-700 outline-none shadow-sm focus:border-blue-400 transition-all" value={newTaskCategory} onChange={(e) => setNewTaskCategory(e.target.value)}>
+                                        {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label className="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-1">Title</label>
+                                <input type="text" placeholder="e.g. Chapter 4 Review" className="w-full p-4 rounded-2xl border border-blue-200 outline-none shadow-sm focus:border-blue-400 transition-all font-bold text-lg" value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-1">Description / Instructions</label>
+                                <input type="text" placeholder="e.g. Complete questions 1-10 on page 42" className="w-full p-4 rounded-2xl border border-blue-200 outline-none shadow-sm focus:border-blue-400 transition-all" value={newTaskDesc} onChange={(e) => setNewTaskDesc(e.target.value)} />
+                            </div>
+
+                            <button onClick={addTask} className="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl hover:bg-blue-700 shadow-lg shadow-blue-200 transform active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-lg">
+                                <Plus className="w-6 h-6" /> Add Task to Schedule
+                            </button>
+                        </div>
+                  </div>
+
                   <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
                     <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center gap-3">
                       <ShieldCheck className="w-5 h-5 text-green-600" />
                       <div>
-                          <h2 className="text-lg font-black text-slate-700">Assignments Verification</h2>
-                          <p className="text-sm text-slate-500">Review completed work below.</p>
+                          <h2 className="text-lg font-black text-slate-700">Assignments & Schedule</h2>
+                          <p className="text-sm text-slate-500">Manage daily tasks here.</p>
                       </div>
                     </div>
                     <div className="divide-y divide-slate-100">
@@ -850,18 +892,19 @@
                                 else bgClass = 'bg-white border-slate-200 opacity-70';
 
                                 return (
-                                  <div key={task.id} className={`p-3 rounded-xl border flex flex-col justify-between gap-3 select-none transition-all ${bgClass}`}>
+                                  <div key={task.id} className={`p-3 rounded-xl border flex flex-col justify-between gap-3 select-none transition-all ${bgClass} group relative`}>
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-start gap-2">
                                             <div className={`mt-1 w-6 h-6 rounded flex items-center justify-center border transition-colors ${isDone ? 'bg-green-500 border-green-500' : isFlagged ? 'bg-yellow-400 border-yellow-400' : 'bg-white border-slate-300'}`}>
                                                 {isDone && <CheckCircle2 className="w-4 h-4 text-white" />}
                                                 {isFlagged && <HelpCircle className="w-4 h-4 text-white" />}
                                             </div>
-                                            <div>
+                                            <div className="flex-1 min-w-0">
                                                 <span className="text-xs font-bold text-slate-400 uppercase">{task.category}</span>
-                                                <span className={`text-sm font-bold block leading-tight ${isDone ? 'text-green-800' : isFlagged ? 'text-yellow-800' : 'text-slate-600'}`}>
+                                                {task.title && <div className="font-black text-slate-800 text-sm truncate">{task.title}</div>}
+                                                <div className={`text-xs font-medium block leading-tight ${isDone ? 'text-green-800' : isFlagged ? 'text-yellow-800' : 'text-slate-500'}`}>
                                                     {task.description}
-                                                </span>
+                                                </div>
                                                 <div className="flex flex-wrap gap-2 text-[10px] font-bold mt-1">
                                                     <span className="uppercase text-slate-400">{points} PTS</span>
                                                     {isDone && timestamp && <span className="text-blue-500">@{timestamp}</span>}
@@ -872,6 +915,11 @@
                                     </div>
                                     
                                     <div className="flex items-center justify-end gap-2 border-t border-slate-100/50 pt-2 mt-auto">
+                                            {/* Always show delete button in Parent Mode */}
+                                            <button onClick={() => deleteTask(sub.id, task.id)} className="bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 p-2 rounded-lg transition-colors" title="Delete Task">
+                                                <Trash2 className="w-3 h-3" />
+                                            </button>
+
                                             {isDone && (
                                                 <button onClick={() => { setRejectModal({ taskObj: task }); setDeductionAmount(points); }} className="bg-red-100 hover:bg-red-200 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors">
                                                     <ThumbsDown className="w-3 h-3" /> Reject
@@ -979,75 +1027,6 @@
                                 ) : (
                                     <p className="text-center text-slate-400 py-10">No detailed activity recorded for this day.</p>
                                 )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {isScheduleModalOpen && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                        <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setIsScheduleModalOpen(false)} />
-                        <div className="bg-white rounded-3xl w-full max-w-lg p-6 relative z-10 shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden flex flex-col max-h-[85vh]">
-                            <div className="flex justify-between items-center mb-4 border-b pb-4">
-                                <h3 className="text-xl font-black text-slate-800">Build Schedule: {dateStr}</h3>
-                                <button onClick={() => setIsScheduleModalOpen(false)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200"><X className="w-5 h-5"/></button>
-                            </div>
-                            <div className="flex-1 overflow-y-auto pr-2 space-y-6">
-                                
-                                {/* Task Creator */}
-                                <div className="bg-blue-50 p-4 rounded-2xl border-2 border-blue-100">
-                                    <h4 className="font-bold text-blue-800 mb-3 flex items-center gap-2"><Plus className="w-4 h-4"/> Add New Task</h4>
-                                    <div className="space-y-3">
-                                        <select className="w-full p-3 rounded-xl border border-blue-200 bg-white font-bold text-slate-700 outline-none" value={newTaskSubject || ""} onChange={(e) => setNewTaskSubject(e.target.value)}>
-                                            <option value="" disabled>Select Subject...</option>
-                                            {SUBJECTS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
-                                        </select>
-                                        
-                                        <div className="flex gap-2">
-                                            <select className="w-1/3 p-3 rounded-xl border border-blue-200 bg-white text-sm font-bold text-slate-700 outline-none" value={newTaskCategory} onChange={(e) => setNewTaskCategory(e.target.value)}>
-                                                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                                            </select>
-                                            <input type="text" placeholder="Task Description..." className="w-2/3 p-3 rounded-xl border border-blue-200 outline-none" value={newTaskDesc} onChange={(e) => setNewTaskDesc(e.target.value)} />
-                                        </div>
-                                        <button onClick={addTask} className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200">Add Task</button>
-                                    </div>
-                                </div>
-
-                                {/* List by Subject */}
-                                <div className="space-y-4">
-                                    {SUBJECTS.map(sub => {
-                                        const tasks = getSubjectTasks(sub.id);
-                                        if (tasks.length === 0 && !data.visibleSubjects.includes(sub.id)) return null;
-
-                                        return (
-                                            <div key={sub.id} className="border border-slate-200 rounded-xl overflow-hidden">
-                                                <div className={`p-3 bg-slate-50 flex justify-between items-center border-b border-slate-100`}>
-                                                    <div className="flex items-center gap-2 font-bold text-slate-700">
-                                                        {sub.icon} {sub.label} <span className="text-xs bg-slate-200 px-2 py-0.5 rounded-full text-slate-500">{tasks.length}/6</span>
-                                                    </div>
-                                                    <button onClick={() => toggleSubjectVisibility(sub.id)} className="text-slate-400 hover:text-blue-600">
-                                                        {isSubjectVisible(sub.id) ? <Eye className="w-4 h-4"/> : <EyeOff className="w-4 h-4"/>}
-                                                    </button>
-                                                </div>
-                                                <div className="p-3 space-y-2">
-                                                    {tasks.map(task => (
-                                                        <div key={task.id} className="flex justify-between items-center bg-white p-2 rounded-lg border border-slate-100 shadow-sm">
-                                                            <div className="text-sm">
-                                                                <span className="text-xs font-bold text-slate-400 block">{task.category}</span>
-                                                                {task.description}
-                                                            </div>
-                                                            <button onClick={() => deleteTask(sub.id, task.id)} className="text-red-400 hover:text-red-600 p-1"><Trash2 className="w-4 h-4"/></button>
-                                                        </div>
-                                                    ))}
-                                                    {tasks.length === 0 && <p className="text-xs text-slate-400 text-center italic">No tasks added.</p>}
-                                                </div>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            </div>
-                            <div className="pt-4 mt-2 border-t">
-                                <button onClick={() => setIsScheduleModalOpen(false)} className="w-full py-3 bg-slate-800 text-white font-bold rounded-xl">Done Editing</button>
                             </div>
                         </div>
                     </div>
@@ -1220,9 +1199,10 @@
                                                             {isDone && <CheckCircle2 className="w-5 h-5 text-white" />}
                                                             {isFlagged && <HelpCircle className="w-5 h-5 text-white" />}
                                                         </div>
-                                                        <div>
+                                                        <div className="flex-1 min-w-0">
                                                             <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">{task.category}</span>
-                                                            <span className={`text-lg font-bold block leading-tight ${isDone ? 'text-green-800' : isFlagged ? 'text-yellow-800' : 'text-slate-600'}`}>
+                                                            {task.title && <div className="text-lg font-black text-slate-800 leading-tight mb-1">{task.title}</div>}
+                                                            <span className={`text-sm font-medium block leading-tight ${isDone ? 'text-green-800' : isFlagged ? 'text-yellow-800' : 'text-slate-600'}`}>
                                                                 {task.description}
                                                             </span>
                                                             <div className="flex flex-wrap gap-2 text-xs font-bold mt-1">
@@ -1266,7 +1246,7 @@
                                       {focusTask.icon}
                                       <div>
                                         <p className="text-xs font-bold text-slate-400 uppercase">{focusTask.category}</p>
-                                        <h2 className="text-xl font-black text-slate-800">{focusTask.description}</h2>
+                                        <h2 className="text-xl font-black text-slate-800">{focusTask.title || focusTask.description}</h2>
                                       </div>
                                   </div>
                                   <button onClick={() => setFocusTask(null)} className="p-2 bg-slate-200 rounded-full hover:bg-slate-300 transition-colors">
@@ -1275,6 +1255,7 @@
                               </div>
                               
                               <div className="p-8 flex flex-col items-center gap-8">
+                                  {focusTask.title && <p className="text-lg font-medium text-slate-600 text-center">{focusTask.description}</p>}
                                   {renderFocusContent()}
                                   
                                   <div className="grid grid-cols-2 gap-4 w-full">
