@@ -137,6 +137,12 @@
         const STUDENT_NAME = "Gabriel Mendoza";
         const DEFAULT_GOAL = 50;
 
+        // FIXED: Helper to get local date string in YYYY-MM-DD format (fixes timezone issues for EST)
+        const getLocalISODate = (d = new Date()) => {
+            const offset = d.getTimezoneOffset() * 60000;
+            return new Date(d.getTime() - offset).toISOString().split('T')[0];
+        };
+
         // FIXED: Corrected array string syntax
         const SUBJECTS = [
           { 
@@ -263,7 +269,10 @@
           const [user, setUser] = useState(null);
           const [loading, setLoading] = useState(true);
           const [authError, setAuthError] = useState(null);
-          const [dateStr, setDateStr] = useState(new Date().toISOString().split('T')[0]);
+          
+          // FIXED: Initialize dateStr with local date string instead of UTC
+          const [dateStr, setDateStr] = useState(getLocalISODate());
+          
           const [data, setData] = useState({});
           const [history, setHistory] = useState([]);
           const [settings, setSettings] = useState({});
@@ -446,7 +455,8 @@
                         yPos += 8;
                     });
                 }
-                doc.save(`${STUDENT_NAME.replace(' ', '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+                // FIXED: Use local date string for filename
+                doc.save(`${STUDENT_NAME.replace(' ', '_')}_${getLocalISODate()}.pdf`);
                 triggerConfetti(); 
              } catch (e) {
                  console.error("PDF Error", e);
@@ -746,12 +756,14 @@
                           )}
                       </div>
                       <div className="flex gap-2">
-                          <button onClick={() => setDateStr(new Date().toISOString().split('T')[0])} className="text-xs bg-slate-100 text-slate-600 font-bold px-3 py-2 rounded-lg hover:bg-slate-200 transition-colors">Jump to Today</button>
+                          {/* FIXED: Jump to Today uses local date logic */}
+                          <button onClick={() => setDateStr(getLocalISODate())} className="text-xs bg-slate-100 text-slate-600 font-bold px-3 py-2 rounded-lg hover:bg-slate-200 transition-colors">Jump to Today</button>
                           <button 
                             onClick={() => {
+                                // FIXED: Plan Tomorrow uses local date logic
                                 const tomorrow = new Date();
                                 tomorrow.setDate(tomorrow.getDate() + 1);
-                                setDateStr(tomorrow.toISOString().split('T')[0]);
+                                setDateStr(getLocalISODate(tomorrow));
                             }} 
                             className="text-xs bg-indigo-100 text-indigo-600 font-bold px-3 py-2 rounded-lg hover:bg-indigo-200 transition-colors flex items-center gap-1"
                           >
@@ -1083,13 +1095,13 @@
                       </div>
                       
                       <div className="flex items-center gap-2">
-                           <button onClick={handleDownloadPDF} className="p-2 bg-indigo-50 text-indigo-600 rounded-lg shadow-sm border border-indigo-100 hover:scale-105 transition-transform" title="Download Report">
+                            <button onClick={handleDownloadPDF} className="p-2 bg-indigo-50 text-indigo-600 rounded-lg shadow-sm border border-indigo-100 hover:scale-105 transition-transform" title="Download Report">
                              <FileDown className="w-5 h-5" />
-                           </button>
-                           
-                           <button onClick={() => setShowStudentLog(true)} className="p-2 bg-green-50 text-green-600 rounded-lg shadow-sm border border-green-100 hover:scale-105 transition-transform" title="My Log">
+                            </button>
+                            
+                            <button onClick={() => setShowStudentLog(true)} className="p-2 bg-green-50 text-green-600 rounded-lg shadow-sm border border-green-100 hover:scale-105 transition-transform" title="My Log">
                              <Clock className="w-5 h-5" />
-                           </button>
+                            </button>
 
                           <button onClick={() => setViewMode('pin_entry')} className="p-2 bg-white rounded-lg shadow-sm border border-slate-100 hover:scale-105 transition-transform">
                             <Settings className="w-5 h-5 text-slate-400" />
@@ -1129,23 +1141,23 @@
                                        className={`group relative bg-white rounded-3xl p-4 text-left border-b-4 transition-all hover:scale-[1.02] active:scale-[0.98] ${sub.borderColor} ${isComplete ? 'opacity-70' : ''} min-h-[140px] flex flex-col justify-between shadow-sm card-border border-transparent hover:border-slate-100`}
                                        style={{ animationDelay: `${index * 50}ms` }}
                                     >
-                                       <div className="flex justify-between items-start mb-1">
+                                        <div className="flex justify-between items-start mb-1">
                                             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center bg-gradient-to-br ${sub.color} text-slate-800 shadow-sm group-hover:shadow-md transition-shadow`}>
-                                               {React.cloneElement(sub.icon, { className: "w-6 h-6" })}
+                                                {React.cloneElement(sub.icon, { className: "w-6 h-6" })}
                                             </div>
                                             <div className={`text-[10px] font-black px-2 py-1 rounded-full ${isComplete ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
-                                               {isComplete ? 'DONE' : `${progress}%`}
+                                                {isComplete ? 'DONE' : `${progress}%`}
                                             </div>
-                                       </div>
-                                       
-                                       <div>
+                                        </div>
+                                        
+                                        <div>
                                             <h2 className="text-lg font-black text-slate-800 leading-tight mb-0.5">{sub.label}</h2>
                                             <p className="text-slate-400 font-bold text-xs">{visibleTaskCount} Activities</p>
-                                       </div>
-                                       
-                                       <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mt-2">
-                                          <div className={`h-full bg-gradient-to-r ${sub.color}`} style={{ width: `${progress}%` }} />
-                                       </div>
+                                        </div>
+                                        
+                                        <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mt-2">
+                                           <div className={`h-full bg-gradient-to-r ${sub.color}`} style={{ width: `${progress}%` }} />
+                                        </div>
                                     </button>
                                 )
                             })}
