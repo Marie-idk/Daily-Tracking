@@ -43,6 +43,15 @@
         
         /* Neurodivergent friendly: Clear distinct borders */
         .card-border { border: 3px solid; }
+        
+        /* Select Dropdown Styling */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.7rem top 50%;
+            background-size: 0.65rem auto;
+        }
     </style>
 </head>
 <body class="bg-pastel-gradient min-h-screen text-slate-700 selection:bg-pink-200">
@@ -64,7 +73,8 @@
             collection, 
             getDocs, 
             query, 
-            deleteField 
+            deleteField,
+            deleteDoc
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const { useState, useEffect, createElement } = React;
@@ -115,6 +125,7 @@
         const ChevronDown = (p) => <IconBase {...p} d={<><path d="m6 9 6 6 6-6"/></>} />;
         const ChevronRight = (p) => <IconBase {...p} d={<><path d="m9 18 6-6-6-6"/></>} />;
         const FileDown = (p) => <IconBase {...p} d={<><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/></>} />;
+        const Plus = (p) => <IconBase {...p} d={<><path d="M5 12h14"/><path d="M12 5v14"/></>} />;
 
         // --- FIREBASE CONFIGURATION ---
         const firebaseConfig = {
@@ -137,13 +148,12 @@
         const STUDENT_NAME = "Gabriel Mendoza";
         const DEFAULT_GOAL = 50;
 
-        // FIXED: Helper to get local date string in YYYY-MM-DD format (fixes timezone issues for EST)
         const getLocalISODate = (d = new Date()) => {
             const offset = d.getTimezoneOffset() * 60000;
             return new Date(d.getTime() - offset).toISOString().split('T')[0];
         };
 
-        // FIXED: Corrected array string syntax
+        // --- CONSTANTS ---
         const SUBJECTS = [
           { 
             id: 'english', 
@@ -151,8 +161,7 @@
             icon: <BookOpen className="w-8 h-8 text-pink-600" />, 
             color: 'from-pink-300 to-rose-200', 
             borderColor: 'border-pink-300',
-            btnColor: 'bg-pink-100 text-pink-700',
-            tasks: ['Check In', 'Recap', 'Reading', 'Lesson', 'Vocabulary', 'Assignment', 'Mark as done', 'Upload']
+            btnColor: 'bg-pink-100 text-pink-700'
           },
           { 
             id: 'math', 
@@ -160,8 +169,7 @@
             icon: <Calculator className="w-8 h-8 text-blue-600" />, 
             color: 'from-blue-300 to-cyan-200', 
             borderColor: 'border-blue-300',
-            btnColor: 'bg-blue-100 text-blue-700',
-            tasks: ['Check In', 'Watch Lesson', 'Assignment', 'Math Game', 'Mark as done', 'Upload']
+            btnColor: 'bg-blue-100 text-blue-700'
           },
           { 
             id: 'science', 
@@ -169,8 +177,7 @@
             icon: <FlaskConical className="w-8 h-8 text-green-600" />, 
             color: 'from-emerald-300 to-green-200', 
             borderColor: 'border-green-300',
-            btnColor: 'bg-green-100 text-green-700',
-            tasks: ['Check In', 'Experiment Video', 'Lab Report', 'Quiz', 'Mark as done', 'Upload']
+            btnColor: 'bg-green-100 text-green-700'
           },
           { 
             id: 'social', 
@@ -178,8 +185,7 @@
             icon: <Globe2 className="w-8 h-8 text-purple-600" />, 
             color: 'from-purple-300 to-violet-200', 
             borderColor: 'border-purple-300',
-            btnColor: 'bg-purple-100 text-purple-700',
-            tasks: ['Check In', 'Map Activity', 'Reading', 'Questions', 'Mark as done', 'Upload']
+            btnColor: 'bg-purple-100 text-purple-700'
           },
           { 
             id: 'art', 
@@ -187,8 +193,7 @@
             icon: <Palette className="w-8 h-8 text-orange-600" />, 
             color: 'from-orange-300 to-amber-200', 
             borderColor: 'border-orange-300',
-            btnColor: 'bg-orange-100 text-orange-700',
-            tasks: ['Check In', 'Creative Project']
+            btnColor: 'bg-orange-100 text-orange-700'
           },
           { 
             id: 'music', 
@@ -196,8 +201,7 @@
             icon: <Music className="w-8 h-8 text-teal-600" />, 
             color: 'from-teal-300 to-cyan-200', 
             borderColor: 'border-teal-300',
-            btnColor: 'bg-teal-100 text-teal-700',
-            tasks: ['Check In', 'Listening Activity']
+            btnColor: 'bg-teal-100 text-teal-700'
           },
           { 
             id: 'pe', 
@@ -205,39 +209,40 @@
             icon: <Activity className="w-8 h-8 text-red-600" />, 
             color: 'from-red-300 to-orange-200', 
             borderColor: 'border-red-300',
-            btnColor: 'bg-red-100 text-red-700',
-            tasks: ['Check In', 'Movement Break']
+            btnColor: 'bg-red-100 text-red-700'
           }
         ];
 
-        const POINTS = {
-          checkin: 2,
-          video: 5,
-          reading: 10,
-          lesson: 10,
-          vocabulary: 10,
-          assignment: 10,
-          markasdone: 10,
-          upload: 10,
-          worksheet: 10,
-          game: 10,
-          recap: 5
+        const CATEGORIES = [
+           "Lesson",
+           "Assignment",
+           "Video",
+           "Experiment",
+           "Writing Assignment",
+           "Vocabulary",
+           "Review",
+           "Quiz",
+           "Practice",
+           "Diagram",
+           "Map Activity"
+        ];
+
+        const POINTS_BY_CATEGORY = {
+          "Lesson": 10,
+          "Assignment": 10,
+          "Video": 5,
+          "Experiment": 15,
+          "Writing Assignment": 15,
+          "Vocabulary": 10,
+          "Review": 5,
+          "Quiz": 20,
+          "Practice": 10,
+          "Diagram": 10,
+          "Map Activity": 10
         };
 
-        const calculatePoints = (taskName) => {
-            if (taskName.includes("Video")) return POINTS.video;
-            if (taskName.includes("Assignment")) return POINTS.assignment;
-            if (taskName.includes("Worksheet")) return POINTS.worksheet;
-            if (taskName.includes("Reading")) return POINTS.reading;
-            if (taskName.includes("Lesson")) return POINTS.lesson;
-            if (taskName.includes("Vocabulary")) return POINTS.vocabulary;
-            if (taskName.includes("Mark as done")) return POINTS.markasdone;
-            if (taskName.includes("Upload")) return POINTS.upload;
-            if (taskName.includes("Hatchet")) return POINTS.reading; 
-            if (taskName.includes("Recap")) return POINTS.recap; 
-            if (taskName.includes("Game")) return POINTS.game;
-            
-            return POINTS.checkin;
+        const calculatePoints = (category) => {
+            return POINTS_BY_CATEGORY[category] || 5;
         };
 
         const Confetti = ({ active }) => {
@@ -270,7 +275,6 @@
           const [loading, setLoading] = useState(true);
           const [authError, setAuthError] = useState(null);
           
-          // FIXED: Initialize dateStr with local date string instead of UTC
           const [dateStr, setDateStr] = useState(getLocalISODate());
           
           const [data, setData] = useState({});
@@ -287,15 +291,19 @@
             
           const [rejectModal, setRejectModal] = useState(null);
           const [rejectReason, setRejectReason] = useState("");
-          const [deductionAmount, setDeductionAmount] = useState(0); // New state for flexible points
+          const [deductionAmount, setDeductionAmount] = useState(0); 
           
           const [newGoal, setNewGoal] = useState(DEFAULT_GOAL);
           const [viewingHistoryLog, setViewingHistoryLog] = useState(null); 
           const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
           const [expandedSubjects, setExpandedSubjects] = useState({});
           
-          // Added for student log tracking
           const [showStudentLog, setShowStudentLog] = useState(false);
+
+          // State for Task Creation in Modal
+          const [newTaskSubject, setNewTaskSubject] = useState(null);
+          const [newTaskCategory, setNewTaskCategory] = useState("Lesson");
+          const [newTaskDesc, setNewTaskDesc] = useState("");
 
           useEffect(() => {
             const initAuth = async () => {
@@ -334,22 +342,23 @@
                 }
               } else {
                 const allSubjectIds = SUBJECTS.map(s => s.id);
-                const allTaskKeys = [];
-                SUBJECTS.forEach(s => s.tasks.forEach(t => allTaskKeys.push(getTaskKey(s.id, t))));
-                
+                // Initialize with empty custom tasks structure
+                const initialTasks = {};
+                SUBJECTS.forEach(s => initialTasks[s.id] = []);
+
                 setDoc(logRef, { 
                     points: 0, 
                     dailyGoal: DEFAULT_GOAL, 
                     activityLog: [],
                     visibleSubjects: allSubjectIds,
-                    visibleTasks: allTaskKeys 
+                    customTasks: initialTasks
                 }).then(() => {
                   setData({ 
                       points: 0, 
                       dailyGoal: DEFAULT_GOAL, 
                       activityLog: [], 
-                      visibleSubjects: allSubjectIds, 
-                      visibleTasks: allTaskKeys
+                      visibleSubjects: allSubjectIds,
+                      customTasks: initialTasks
                   });
                   setLoading(false);
                 });
@@ -385,30 +394,26 @@
             }
           }, [viewMode, user]);
 
-          const getTaskKey = (subId, taskName) => {
-            const cleanName = taskName.replace(/[^a-z0-9]+/gi, '_').toLowerCase();
-            return `${subId}_${cleanName}`;
-          };
-            
           const isSubjectVisible = (subId) => {
               if (!data.visibleSubjects) return true; 
               return data.visibleSubjects.includes(subId);
           };
 
-          const isTaskVisible = (subId, taskName) => {
-              const key = getTaskKey(subId, taskName);
-              if (!data.visibleTasks) return true;
-              return data.visibleTasks.includes(key);
+          const getSubjectTasks = (subId) => {
+            if (data.customTasks && data.customTasks[subId]) {
+                return data.customTasks[subId];
+            }
+            return [];
           };
 
-          const calculateSubjectProgress = (sub, dataset = data) => {
-            const visibleSubTasks = sub.tasks.filter(t => isTaskVisible(sub.id, t));
-            const totalSteps = visibleSubTasks.length;
+          const calculateSubjectProgress = (sub) => {
+            const subTasks = getSubjectTasks(sub.id);
+            const totalSteps = subTasks.length;
             if (totalSteps === 0) return 100;
 
             let completed = 0;
-            visibleSubTasks.forEach(t => { 
-                if (dataset[getTaskKey(sub.id, t)]) completed++; 
+            subTasks.forEach(t => { 
+                if (data[t.id]) completed++; 
             });
             return Math.round((completed / totalSteps) * 100);
           };
@@ -426,7 +431,7 @@
                 doc.text(STUDENT_NAME, 20, 20); 
                 doc.setFontSize(12);
                 doc.setFont("Helvetica", "normal");
-                doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 30);
+                doc.text(`Date: ${new Date(dateStr).toLocaleDateString()}`, 20, 30);
                 doc.setLineWidth(0.5);
                 doc.line(20, 35, 190, 35);
                 doc.setFontSize(14);
@@ -439,24 +444,29 @@
                 yPos += 10;
                 doc.text(`Daily Goal: ${data.dailyGoal || DEFAULT_GOAL}`, 20, yPos);
                 yPos += 15;
-                doc.setFont("Helvetica", "bold");
-                doc.text("Completed Activities:", 20, yPos);
-                yPos += 10;
-                doc.setFont("Helvetica", "normal");
-                const logs = data.activityLog || [];
-                const completedLogs = logs.filter(l => l.type === 'completion').reverse();
-                if (completedLogs.length === 0) {
-                    doc.text("No activities completed yet today.", 25, yPos);
-                } else {
-                    completedLogs.forEach((log) => {
-                        if (yPos > 270) { doc.addPage(); yPos = 20; }
-                        const subName = SUBJECTS.find(s => s.id === log.subject)?.label || "Activity";
-                        doc.text(`• ${log.time} - ${subName}: ${log.task} (+${log.points})`, 25, yPos);
-                        yPos += 8;
-                    });
-                }
-                // FIXED: Use local date string for filename
-                doc.save(`${STUDENT_NAME.replace(' ', '_')}_${getLocalISODate()}.pdf`);
+                
+                // Print tasks by subject
+                SUBJECTS.forEach(sub => {
+                   const tasks = getSubjectTasks(sub.id);
+                   if (tasks.length > 0) {
+                       if (yPos > 270) { doc.addPage(); yPos = 20; }
+                       doc.setFont("Helvetica", "bold");
+                       doc.text(sub.label, 20, yPos);
+                       yPos += 7;
+                       doc.setFont("Helvetica", "normal");
+                       
+                       tasks.forEach(task => {
+                           const isDone = data[task.id];
+                           const status = isDone ? "[DONE]" : "[ ]";
+                           const pts = calculatePoints(task.category);
+                           doc.text(`${status} ${task.category}: ${task.description} (${pts} pts)`, 25, yPos);
+                           yPos += 6;
+                       });
+                       yPos += 5;
+                   }
+                });
+
+                doc.save(`${STUDENT_NAME.replace(' ', '_')}_${dateStr}.pdf`);
                 triggerConfetti(); 
              } catch (e) {
                  console.error("PDF Error", e);
@@ -484,110 +494,127 @@
               await updateDoc(logRef, { visibleSubjects: newVisible });
           };
 
-          const toggleTaskVisibility = async (subId, taskName) => {
-              if(!user) return;
-              const key = getTaskKey(subId, taskName);
-              let currentVisible = data.visibleTasks;
-              if (!currentVisible) {
-                  currentVisible = [];
-                  SUBJECTS.forEach(s => s.tasks.forEach(t => currentVisible.push(getTaskKey(s.id, t))));
-              }
-              let newVisible;
-              if (currentVisible.includes(key)) {
-                  newVisible = currentVisible.filter(k => k !== key);
-              } else {
-                  newVisible = [...currentVisible, key];
-              }
-              const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
-              await updateDoc(logRef, { visibleTasks: newVisible });
+          // --- Task Management Functions ---
+
+          const addTask = async () => {
+            if (!newTaskSubject || !newTaskDesc) {
+                alert("Please select a subject and type a description.");
+                return;
+            }
+            
+            const tasks = getSubjectTasks(newTaskSubject);
+            if (tasks.length >= 6) {
+                alert("Maximum 6 tasks allowed per subject.");
+                return;
+            }
+
+            const newTask = {
+                id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                category: newTaskCategory,
+                description: newTaskDesc,
+                subjectId: newTaskSubject
+            };
+
+            const updatedTasks = { ...data.customTasks };
+            if (!updatedTasks[newTaskSubject]) updatedTasks[newTaskSubject] = [];
+            updatedTasks[newTaskSubject] = [...updatedTasks[newTaskSubject], newTask];
+
+            const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
+            await updateDoc(logRef, { customTasks: updatedTasks });
+            setNewTaskDesc(""); // Clear input
           };
 
-          const completeTask = async (subId, taskName, pointValue) => {
+          const deleteTask = async (subId, taskId) => {
+             if(!confirm("Remove this task?")) return;
+             const updatedTasks = { ...data.customTasks };
+             updatedTasks[subId] = updatedTasks[subId].filter(t => t.id !== taskId);
+             
+             // Also remove completion status
+             const updates = { customTasks: updatedTasks };
+             updates[taskId] = deleteField();
+             updates[`${taskId}_time`] = deleteField();
+             updates[`${taskId}_flagged`] = deleteField();
+
+             const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
+             await updateDoc(logRef, updates);
+          };
+
+          const deleteEntireLog = async () => {
+              if(!confirm("WARNING: This will permanently delete the entire log for " + dateStr + ". Are you sure?")) return;
+              const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
+              await deleteDoc(logRef);
+              alert("Log deleted.");
+              // Reload page or reset date to today
+              window.location.reload();
+          };
+
+          const completeTask = async (taskObj) => {
             if (!user) return;
-            const key = getTaskKey(subId, taskName);
-            if (data[key]) return; 
+            if (data[taskObj.id]) return; 
+            
+            const pointValue = calculatePoints(taskObj.category);
             const newPoints = (data.points || 0) + pointValue;
+            
             const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
             const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
             const logEntry = {
                 type: 'completion',
-                task: taskName,
-                subject: subId,
+                task: `${taskObj.category}: ${taskObj.description}`,
+                subject: taskObj.subjectId,
                 points: pointValue,
                 time: timeString,
                 id: Date.now() 
             };
             const currentLog = data.activityLog || [];
+            
             await updateDoc(logRef, { 
-                [key]: true, 
-                [`${key}_flagged`]: deleteField(),
+                [taskObj.id]: true, 
+                [`${taskObj.id}_flagged`]: deleteField(),
                 points: newPoints,
-                [`${key}_time`]: timeString,
+                [`${taskObj.id}_time`]: timeString,
                 activityLog: [...currentLog, logEntry]
             });
             triggerConfetti();
             setTimeout(() => { setFocusTask(null); }, 1000);
           };
 
-          const flagTask = async (subId, taskName) => {
+          const flagTask = async (taskObj) => {
               if(!user) return;
-              const key = getTaskKey(subId, taskName);
               const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
               await updateDoc(logRef, {
-                  [`${key}_flagged`]: true,
-                  [key]: false 
+                  [`${taskObj.id}_flagged`]: true,
+                  [taskObj.id]: false 
               });
               setFocusTask(null); 
           };
 
-          const resolveFlag = async (subId, taskName, points, action) => {
-              const key = getTaskKey(subId, taskName);
+          const resolveFlag = async (taskObj, action) => {
+              const points = calculatePoints(taskObj.category);
               const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
+              
               if (action === 'approve') {
                   const newPoints = (data.points || 0) + points;
                   const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                   const logEntry = {
                     type: 'completion',
-                    task: taskName,
-                    subject: subId,
+                    task: `${taskObj.category}: ${taskObj.description}`,
+                    subject: taskObj.subjectId,
                     points: points,
                     time: timeString + " (Resolved)",
                     id: Date.now()
                   };
                   const currentLog = data.activityLog || [];
                   await updateDoc(logRef, {
-                      [key]: true,
-                      [`${key}_flagged`]: deleteField(),
+                      [taskObj.id]: true,
+                      [`${taskObj.id}_flagged`]: deleteField(),
                       points: newPoints,
-                      [`${key}_time`]: timeString,
+                      [`${taskObj.id}_time`]: timeString,
                       activityLog: [...currentLog, logEntry]
                   });
               } else {
-                  await updateDoc(logRef, { [`${key}_flagged`]: deleteField() });
+                  await updateDoc(logRef, { [`${taskObj.id}_flagged`]: deleteField() });
               }
-          };
-
-          const undoTask = async (subId, taskName, pointValue) => {
-              if (!user) return;
-              if(!confirm("Did you click this by mistake? This will undo the points.")) return;
-              const key = getTaskKey(subId, taskName);
-              const newPoints = Math.max(0, (data.points || 0) - pointValue);
-              const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
-              let logRemoved = false;
-              const currentLog = data.activityLog || [];
-              const newLog = [...currentLog].reverse().filter(entry => {
-                  if (!logRemoved && entry.task === taskName && entry.subject === subId && entry.type === 'completion') {
-                      logRemoved = true;
-                      return false;
-                  }
-                  return true;
-              }).reverse();
-              await updateDoc(logRef, {
-                  [key]: false,
-                  points: newPoints,
-                  [`${key}_time`]: deleteField(),
-                  activityLog: newLog
-              });
           };
 
           const handleRejectTask = async () => {
@@ -597,11 +624,8 @@
                 return;
             }
 
-            const { subId, taskName } = rejectModal;
-            const key = getTaskKey(subId, taskName);
-            const subjectLabel = SUBJECTS.find(s => s.id === subId)?.label || "Assignment";
+            const { taskObj } = rejectModal;
             
-            // Allow user defined deduction (can be 0 or more)
             const deduction = parseInt(deductionAmount) || 0;
             const newPoints = (data.points || 0) - deduction;
             
@@ -609,8 +633,8 @@
             
             const logEntry = {
                 type: 'deduction',
-                task: taskName,
-                subject: subId,
+                task: `${taskObj.category}: ${taskObj.description}`,
+                subject: taskObj.subjectId,
                 points: -deduction,
                 reason: rejectReason,
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -619,8 +643,8 @@
             const currentLog = data.activityLog || [];
 
             await updateDoc(logRef, { 
-                [key]: false, 
-                [`${key}_flagged`]: deleteField(), // Ensure flag is removed if present
+                [taskObj.id]: false, 
+                [`${taskObj.id}_flagged`]: deleteField(), 
                 points: newPoints,
                 activityLog: [...currentLog, logEntry],
                 latestAlert: {
@@ -628,9 +652,8 @@
                     type: 'deduction',
                     amount: -deduction,
                     message: rejectReason,
-                    task: taskName,
-                    subjectId: subId,
-                    subjectLabel: subjectLabel,
+                    task: taskObj.description,
+                    subjectId: taskObj.subjectId,
                     timestamp: new Date().toISOString()
                 }
             });
@@ -651,50 +674,32 @@
             }
           };
 
-          const startFocusTask = (task, points, icon, subId) => {
-              setFocusTask({ name: task, points, icon, subId });
+          const startFocusTask = (taskObj) => {
+              const sub = SUBJECTS.find(s => s.id === taskObj.subjectId);
+              setFocusTask({ ...taskObj, icon: sub.icon, points: calculatePoints(taskObj.category) });
           };
 
           const renderFocusContent = () => {
               if (!focusTask) return null;
-              const t = focusTask.name.toLowerCase();
-              if (t.includes("check in")) {
-                  return (<div className="w-full bg-blue-50 border-2 border-blue-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><Clock className="w-16 h-16 text-blue-500" /></div><h3 className="text-2xl font-black text-blue-900">Attendance Check</h3><p className="text-blue-700 font-medium text-xl">1. Open the class website.<br/>2. Click "Check In".<br/>3. Come back here.</p></div>);
+              const cat = focusTask.category;
+              
+              if (cat === "Video") {
+                   return (<div className="w-full bg-indigo-50 border-2 border-indigo-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><PlayCircle className="w-16 h-16 text-indigo-500" /></div><h3 className="text-2xl font-black text-indigo-900">Watch & Learn</h3><p className="text-indigo-700 font-medium text-xl">1. Put on your headphones.<br/>2. Watch the whole video.<br/>3. Don't skip parts.</p></div>);
               }
-              if (t.includes("lesson") && focusTask.subId === 'math') {
-                  return (<div className="w-full bg-blue-50 border-2 border-blue-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><Calculator className="w-16 h-16 text-blue-600" /></div><h3 className="text-2xl font-black text-blue-900">Math Lesson Time</h3><p className="text-blue-700 font-medium text-xl">Get your whiteboard and marker.<br/>Solve the example problems with the video.</p></div>);
+              if (cat === "Experiment") {
+                   return (<div className="w-full bg-emerald-50 border-2 border-emerald-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><FlaskConical className="w-16 h-16 text-emerald-600" /></div><h3 className="text-2xl font-black text-emerald-900">Science Time</h3><p className="text-emerald-700 font-medium text-xl">Follow the steps carefully.<br/>Write down what you see.</p></div>);
               }
-              if (t.includes("experiment") || (t.includes("lesson") && focusTask.subId === 'science')) {
-                  return (<div className="w-full bg-emerald-50 border-2 border-emerald-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><FlaskConical className="w-16 h-16 text-emerald-600" /></div><h3 className="text-2xl font-black text-emerald-900">Science Experiment</h3><p className="text-emerald-700 font-medium text-xl">Watch the experiment video closely.<br/>Write down what happens.</p></div>);
+              if (cat === "Map Activity") {
+                   return (<div className="w-full bg-purple-50 border-2 border-purple-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><Globe2 className="w-16 h-16 text-purple-600" /></div><h3 className="text-2xl font-black text-purple-900">Map Skills</h3><p className="text-purple-700 font-medium text-xl">Look at the key/legend.<br/>Find the places on the list.</p></div>);
               }
-              if (t.includes("map") || (t.includes("lesson") && focusTask.subId === 'social')) {
-                  return (<div className="w-full bg-purple-50 border-2 border-purple-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><Globe2 className="w-16 h-16 text-purple-600" /></div><h3 className="text-2xl font-black text-purple-900">Social Studies</h3><p className="text-purple-700 font-medium text-xl">Look at the map activity.<br/>Find all the locations listed.</p></div>);
+              if (cat === "Reading" || cat === "Writing Assignment" || cat === "Vocabulary") {
+                  return (<div className="w-full bg-yellow-50 border-2 border-yellow-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><BookOpen className="w-16 h-16 text-yellow-600" /></div><h3 className="text-2xl font-black text-yellow-900">Focus on Words</h3><p className="text-yellow-700 font-medium text-xl">Read slowly.<br/>Check your spelling.</p></div>);
               }
-              if (t.includes("video") || t.includes("lesson")) {
-                  return (<div className="w-full bg-indigo-50 border-2 border-indigo-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><PlayCircle className="w-16 h-16 text-indigo-500" /></div><h3 className="text-2xl font-black text-indigo-900">Review the Lesson</h3><p className="text-indigo-700 font-medium text-xl">Pay attention.<br/>Use headphones if you need to.</p></div>);
+              if (cat === "Quiz") {
+                  return (<div className="w-full bg-red-50 border-2 border-red-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><Target className="w-16 h-16 text-red-600" /></div><h3 className="text-2xl font-black text-red-900">Quiz Mode</h3><p className="text-red-700 font-medium text-xl">Take a deep breath.<br/>Read every question twice.</p></div>);
               }
-              if (t.includes("hatchet")) {
-                  return (<div className="w-full bg-green-50 border-2 border-green-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><BookOpen className="w-16 h-16 text-green-600" /></div><h3 className="text-2xl font-black text-green-900">Reading Time</h3><p className="text-green-700 font-medium text-xl">Listen to Chapter 14.<br/>Pay attention.</p></div>);
-              }
-              if (t.includes("recap")) {
-                  return (<div className="w-full bg-purple-50 border-2 border-purple-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><BookOpen className="w-16 h-16 text-purple-500" /></div><h3 className="text-2xl font-black text-purple-900">Quick Review</h3><p className="text-purple-700 font-medium text-xl">Review the recap.<br/>Take notes if needed.</p></div>);
-              }
-              if (t.includes("vocabulary")) {
-                  return (<div className="w-full bg-yellow-50 border-2 border-yellow-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><BookOpen className="w-16 h-16 text-yellow-600" /></div><h3 className="text-2xl font-black text-yellow-900">Word Work</h3><p className="text-yellow-700 font-medium text-xl">Review your vocabulary words.<br/>Study the root and affixes.</p></div>);
-              }
-              if (t.includes("math game")) {
-                  return (<div className="w-full bg-pink-50 border-2 border-pink-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><Gamepad2 className="w-16 h-16 text-pink-500" /></div><h3 className="text-2xl font-black text-pink-900">Play Time!</h3><p className="text-pink-700 font-medium text-xl">Play the math game for 10 minutes.<br/>Try to beat your high score!</p></div>);
-              }
-              if (t.includes("upload")) {
-                  return (<div className="w-full bg-teal-50 border-2 border-teal-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><ClipboardCheck className="w-16 h-16 text-teal-600" /></div><h3 className="text-2xl font-black text-teal-900">Camera Time</h3><p className="text-teal-700 font-medium text-xl">Submit your work.<br/>Upload via File Manager.</p></div>);
-              }
-              if (t.includes("mark as done")) {
-                  return (<div className="w-full bg-blue-50 border-2 border-blue-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><CheckCircle2 className="w-16 h-16 text-blue-600" /></div><h3 className="text-2xl font-black text-blue-900">Almost There!</h3><p className="text-blue-700 font-medium text-xl">Did you finish everything?<br/>select "Mark as Done" in Wix.</p></div>);
-              }
-              if (t.includes("assignment") && focusTask.subId === 'math') {
-                  return (<div className="w-full bg-blue-50 border-2 border-blue-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><Calculator className="w-16 h-16 text-blue-600" /></div><h3 className="text-2xl font-black text-blue-900">Math Lesson Time</h3><p className="text-blue-700 font-medium text-xl">Grab a notebook to show your work.<br/>Solve the math problems.</p></div>);
-             }
-              return (<div className="w-full bg-orange-50 border-2 border-orange-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><ClipboardCheck className="w-16 h-16 text-orange-500" /></div><h3 className="text-2xl font-black text-orange-900">Let's Work!</h3><p className="text-orange-700 font-medium text-xl">Focus on this one task.<br/>Take your time.</p></div>);
+              
+              return (<div className="w-full bg-blue-50 border-2 border-blue-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><ClipboardCheck className="w-16 h-16 text-blue-500" /></div><h3 className="text-2xl font-black text-blue-900">Let's Work!</h3><p className="text-blue-700 font-medium text-xl">Focus on this one task.<br/>Raise your hand if stuck.</p></div>);
           };
 
           if (loading || authError) {
@@ -756,11 +761,9 @@
                           )}
                       </div>
                       <div className="flex gap-2">
-                          {/* FIXED: Jump to Today uses local date logic */}
                           <button onClick={() => setDateStr(getLocalISODate())} className="text-xs bg-slate-100 text-slate-600 font-bold px-3 py-2 rounded-lg hover:bg-slate-200 transition-colors">Jump to Today</button>
                           <button 
                             onClick={() => {
-                                // FIXED: Plan Tomorrow uses local date logic
                                 const tomorrow = new Date();
                                 tomorrow.setDate(tomorrow.getDate() + 1);
                                 setDateStr(getLocalISODate(tomorrow));
@@ -802,13 +805,15 @@
                       <ShieldCheck className="w-5 h-5 text-green-600" />
                       <div>
                           <h2 className="text-lg font-black text-slate-700">Assignments Verification</h2>
-                          <p className="text-sm text-slate-500">Tasks marked done by student appear green. Click <strong>Reject</strong> to deduct points. <br/>Use the <strong>Eye Icon</strong> to Hide/Show Subjects and Tasks for the student.</p>
+                          <p className="text-sm text-slate-500">Review completed work below.</p>
                       </div>
                     </div>
                     <div className="divide-y divide-slate-100">
                       {SUBJECTS.map(sub => {
                         const isVisible = isSubjectVisible(sub.id);
                         const progress = calculateSubjectProgress(sub);
+                        const subTasks = getSubjectTasks(sub.id);
+
                         return (
                           <div key={sub.id} className={`p-6 transition-colors ${isVisible ? 'hover:bg-slate-50' : 'bg-slate-50 opacity-60'}`}>
                             <div className="flex items-center justify-between mb-4">
@@ -833,22 +838,19 @@
                                 </button>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                              {sub.tasks.map(task => {
-                                const key = getTaskKey(sub.id, task);
-                                const isDone = data[key];
-                                const isFlagged = data[`${key}_flagged`];
-                                const isVis = isTaskVisible(sub.id, task);
-                                const timestamp = data[`${key}_time`]; 
-                                const points = calculatePoints(task); 
+                              {subTasks.map(task => {
+                                const isDone = data[task.id];
+                                const isFlagged = data[`${task.id}_flagged`];
+                                const timestamp = data[`${task.id}_time`]; 
+                                const points = calculatePoints(task.category); 
 
                                 let bgClass = 'bg-white border-slate-200';
-                                if (!isVis) bgClass = 'bg-slate-100 border-slate-200 opacity-50';
-                                else if (isDone) bgClass = 'bg-green-50 border-green-300 shadow-sm';
+                                if (isDone) bgClass = 'bg-green-50 border-green-300 shadow-sm';
                                 else if (isFlagged) bgClass = 'bg-yellow-50 border-yellow-300 shadow-sm';
                                 else bgClass = 'bg-white border-slate-200 opacity-70';
 
                                 return (
-                                  <div key={key} className={`p-3 rounded-xl border flex flex-col justify-between gap-3 select-none transition-all ${bgClass}`}>
+                                  <div key={task.id} className={`p-3 rounded-xl border flex flex-col justify-between gap-3 select-none transition-all ${bgClass}`}>
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-start gap-2">
                                             <div className={`mt-1 w-6 h-6 rounded flex items-center justify-center border transition-colors ${isDone ? 'bg-green-500 border-green-500' : isFlagged ? 'bg-yellow-400 border-yellow-400' : 'bg-white border-slate-300'}`}>
@@ -856,8 +858,9 @@
                                                 {isFlagged && <HelpCircle className="w-4 h-4 text-white" />}
                                             </div>
                                             <div>
+                                                <span className="text-xs font-bold text-slate-400 uppercase">{task.category}</span>
                                                 <span className={`text-sm font-bold block leading-tight ${isDone ? 'text-green-800' : isFlagged ? 'text-yellow-800' : 'text-slate-600'}`}>
-                                                    {task} {!isVis && "(Hidden)"}
+                                                    {task.description}
                                                 </span>
                                                 <div className="flex flex-wrap gap-2 text-[10px] font-bold mt-1">
                                                     <span className="uppercase text-slate-400">{points} PTS</span>
@@ -866,28 +869,21 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <button 
-                                            onClick={() => toggleTaskVisibility(sub.id, task)} 
-                                            className="p-1 text-slate-400 hover:text-blue-600 rounded"
-                                            title={isVis ? "Hide Task" : "Show Task"}
-                                        >
-                                            {isVis ? <Eye className="w-4 h-4"/> : <EyeOff className="w-4 h-4"/>}
-                                        </button>
                                     </div>
                                     
                                     <div className="flex items-center justify-end gap-2 border-t border-slate-100/50 pt-2 mt-auto">
                                         {isDone && (
-                                            <button onClick={() => { setRejectModal({ subId: sub.id, taskName: task }); setDeductionAmount(points); }} className="bg-red-100 hover:bg-red-200 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors">
+                                            <button onClick={() => { setRejectModal({ taskObj: task }); setDeductionAmount(points); }} className="bg-red-100 hover:bg-red-200 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors">
                                                 <ThumbsDown className="w-3 h-3" /> Reject
                                             </button>
                                         )}
                                         
                                         {isFlagged && (
                                             <div className="flex gap-1">
-                                                <button onClick={() => resolveFlag(sub.id, task, points, 'approve')} className="bg-green-100 text-green-700 p-2 rounded-lg hover:bg-green-200" title="Mark Done (Award Points)">
+                                                <button onClick={() => resolveFlag(task, 'approve')} className="bg-green-100 text-green-700 p-2 rounded-lg hover:bg-green-200" title="Mark Done (Award Points)">
                                                     <Check className="w-4 h-4" />
                                                 </button>
-                                                <button onClick={() => { setRejectModal({ subId: sub.id, taskName: task }); setDeductionAmount(0); }} className="bg-red-100 text-red-600 p-2 rounded-lg hover:bg-red-200" title="Reject Help Request">
+                                                <button onClick={() => { setRejectModal({ taskObj: task }); setDeductionAmount(0); }} className="bg-red-100 text-red-600 p-2 rounded-lg hover:bg-red-200" title="Reject Help Request">
                                                     <ThumbsDown className="w-4 h-4" />
                                                 </button>
                                             </div>
@@ -896,6 +892,7 @@
                                   </div>
                                 )
                               })}
+                              {subTasks.length === 0 && <p className="text-xs text-slate-400 italic p-2">No tasks assigned yet.</p>}
                             </div>
                           </div>
                         )
@@ -944,9 +941,13 @@
                     </div>
                   </div>
 
-                  <div className="border-t pt-8 mt-8">
-                      <button onClick={async () => { if(confirm("Reset today's points and progress?")) { const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr); await setDoc(logRef, { points: 0, worksheets: 0, dailyGoal: DEFAULT_GOAL, activityLog: [], visibleSubjects: SUBJECTS.map(s => s.id) }); } }} className="text-red-500 font-bold text-sm flex items-center gap-2 hover:text-red-700">
-                        <Trash2 className="w-4 h-4" /> Reset Today's Data
+                  <div className="border-t pt-8 mt-8 flex flex-col gap-4">
+                      <button onClick={async () => { if(confirm("Reset today's points and progress?")) { const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr); await updateDoc(logRef, { points: 0, activityLog: [] }); } }} className="text-orange-500 font-bold text-sm flex items-center gap-2 hover:text-orange-700 self-start">
+                        <RotateCcw className="w-4 h-4" /> Reset Today's Points
+                      </button>
+
+                      <button onClick={deleteEntireLog} className="text-red-500 font-bold text-sm flex items-center gap-2 hover:text-red-700 self-start border border-red-200 bg-red-50 px-4 py-2 rounded-lg">
+                        <Trash2 className="w-4 h-4" /> DELETE ENTIRE LOG FOR {dateStr}
                       </button>
                   </div>
                 </main>
@@ -986,55 +987,68 @@
                 {isScheduleModalOpen && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                         <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setIsScheduleModalOpen(false)} />
-                        <div className="bg-white rounded-3xl w-full max-w-sm p-6 relative z-10 shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden flex flex-col max-h-[85vh]">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-xl font-black text-slate-800">Plan Today's Schedule</h3>
+                        <div className="bg-white rounded-3xl w-full max-w-lg p-6 relative z-10 shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden flex flex-col max-h-[85vh]">
+                            <div className="flex justify-between items-center mb-4 border-b pb-4">
+                                <h3 className="text-xl font-black text-slate-800">Build Schedule: {dateStr}</h3>
                                 <button onClick={() => setIsScheduleModalOpen(false)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200"><X className="w-5 h-5"/></button>
                             </div>
-                            <div className="space-y-3 overflow-y-auto flex-1 pr-2">
-                                {SUBJECTS.map(sub => {
-                                    const isSubVisible = isSubjectVisible(sub.id);
-                                    const isExpanded = expandedSubjects[sub.id];
-                                     
-                                    return (
-                                        <div key={sub.id} className={`rounded-xl border-2 transition-all ${isSubVisible ? 'bg-white border-blue-100' : 'bg-slate-50 border-slate-100 opacity-70'}`}>
-                                            <div className="flex items-center justify-between p-3">
-                                                <button 
-                                                    onClick={() => setExpandedSubjects(prev => ({...prev, [sub.id]: !prev[sub.id]}))}
-                                                    className="flex items-center gap-3 flex-1 text-left"
-                                                >
-                                                    <div className={`p-2 rounded-lg ${isSubVisible ? 'bg-blue-100 text-blue-600' : 'bg-slate-200 text-slate-500'}`}>
-                                                        {sub.icon}
-                                                    </div>
-                                                    <span className={`font-bold ${isSubVisible ? 'text-slate-800' : 'text-slate-500'}`}>{sub.label}</span>
-                                                    {isSubVisible && (isExpanded ? <ChevronDown className="w-4 h-4 text-slate-400"/> : <ChevronRight className="w-4 h-4 text-slate-400"/>)}
-                                                </button>
-                                                 
-                                                <button onClick={() => toggleSubjectVisibility(sub.id)} className="p-2">
-                                                    {isSubVisible ? <Eye className="w-5 h-5 text-blue-500"/> : <EyeOff className="w-5 h-5 text-slate-400"/>}
-                                                </button>
-                                            </div>
-
-                                            {isSubVisible && isExpanded && (
-                                                <div className="px-3 pb-3 space-y-2 border-t border-blue-50 pt-2">
-                                                    {sub.tasks.map(task => {
-                                                        const isTVisible = isTaskVisible(sub.id, task);
-                                                        return (
-                                                            <div key={task} className="flex items-center justify-between pl-4 pr-2 py-1">
-                                                                <span className={`text-sm font-medium ${isTVisible ? 'text-slate-600' : 'text-slate-400 line-through'}`}>{task}</span>
-                                                                <button onClick={() => toggleTaskVisibility(sub.id, task)}>
-                                                                    {isTVisible ? <div className="w-8 h-5 bg-green-500 rounded-full relative"><div className="w-3 h-3 bg-white rounded-full absolute right-1 top-1 shadow-sm"/></div> : <div className="w-8 h-5 bg-slate-300 rounded-full relative"><div className="w-3 h-3 bg-white rounded-full absolute left-1 top-1 shadow-sm"/></div>}
-                                                                </button>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            )}
+                            <div className="flex-1 overflow-y-auto pr-2 space-y-6">
+                                
+                                {/* Task Creator */}
+                                <div className="bg-blue-50 p-4 rounded-2xl border-2 border-blue-100">
+                                    <h4 className="font-bold text-blue-800 mb-3 flex items-center gap-2"><Plus className="w-4 h-4"/> Add New Task</h4>
+                                    <div className="space-y-3">
+                                        <select className="w-full p-3 rounded-xl border border-blue-200 bg-white font-bold text-slate-700 outline-none" value={newTaskSubject || ""} onChange={(e) => setNewTaskSubject(e.target.value)}>
+                                            <option value="" disabled>Select Subject...</option>
+                                            {SUBJECTS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                                        </select>
+                                        
+                                        <div className="flex gap-2">
+                                            <select className="w-1/3 p-3 rounded-xl border border-blue-200 bg-white text-sm font-bold text-slate-700 outline-none" value={newTaskCategory} onChange={(e) => setNewTaskCategory(e.target.value)}>
+                                                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                            </select>
+                                            <input type="text" placeholder="Task Description..." className="w-2/3 p-3 rounded-xl border border-blue-200 outline-none" value={newTaskDesc} onChange={(e) => setNewTaskDesc(e.target.value)} />
                                         </div>
-                                    );
-                                })}
+                                        <button onClick={addTask} className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200">Add Task</button>
+                                    </div>
+                                </div>
+
+                                {/* List by Subject */}
+                                <div className="space-y-4">
+                                    {SUBJECTS.map(sub => {
+                                        const tasks = getSubjectTasks(sub.id);
+                                        if (tasks.length === 0 && !data.visibleSubjects.includes(sub.id)) return null;
+
+                                        return (
+                                            <div key={sub.id} className="border border-slate-200 rounded-xl overflow-hidden">
+                                                <div className={`p-3 bg-slate-50 flex justify-between items-center border-b border-slate-100`}>
+                                                    <div className="flex items-center gap-2 font-bold text-slate-700">
+                                                        {sub.icon} {sub.label} <span className="text-xs bg-slate-200 px-2 py-0.5 rounded-full text-slate-500">{tasks.length}/6</span>
+                                                    </div>
+                                                    <button onClick={() => toggleSubjectVisibility(sub.id)} className="text-slate-400 hover:text-blue-600">
+                                                        {isSubjectVisible(sub.id) ? <Eye className="w-4 h-4"/> : <EyeOff className="w-4 h-4"/>}
+                                                    </button>
+                                                </div>
+                                                <div className="p-3 space-y-2">
+                                                    {tasks.map(task => (
+                                                        <div key={task.id} className="flex justify-between items-center bg-white p-2 rounded-lg border border-slate-100 shadow-sm">
+                                                            <div className="text-sm">
+                                                                <span className="text-xs font-bold text-slate-400 block">{task.category}</span>
+                                                                {task.description}
+                                                            </div>
+                                                            <button onClick={() => deleteTask(sub.id, task.id)} className="text-red-400 hover:text-red-600 p-1"><Trash2 className="w-4 h-4"/></button>
+                                                        </div>
+                                                    ))}
+                                                    {tasks.length === 0 && <p className="text-xs text-slate-400 text-center italic">No tasks added.</p>}
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
                             </div>
-                            <button onClick={() => setIsScheduleModalOpen(false)} className="w-full mt-4 py-3 bg-slate-800 text-white font-bold rounded-xl">Done</button>
+                            <div className="pt-4 mt-2 border-t">
+                                <button onClick={() => setIsScheduleModalOpen(false)} className="w-full py-3 bg-slate-800 text-white font-bold rounded-xl">Done Editing</button>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -1043,8 +1057,8 @@
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                         <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setRejectModal(null)} />
                         <div className="bg-white rounded-2xl w-full max-w-sm p-6 relative z-10 shadow-2xl animate-in fade-in zoom-in duration-200">
-                            <h3 className="text-xl font-black text-slate-800 mb-2">Reject: {rejectModal.taskName}</h3>
-                            <p className="text-sm text-slate-500 mb-4">You are returning this task. Set penalty points and give feedback.</p>
+                            <h3 className="text-xl font-black text-slate-800 mb-2">Reject Task</h3>
+                            <p className="text-sm text-slate-500 mb-4">You are returning: <span className="font-bold">{rejectModal.taskObj.description}</span></p>
                             
                             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Points to Deduct</label>
                             <input 
@@ -1059,7 +1073,7 @@
                             <input 
                                 type="text" 
                                 autoFocus 
-                                placeholder="e.g. Incomplete work, didn't follow instructions..." 
+                                placeholder="e.g. Incomplete work..." 
                                 value={rejectReason} 
                                 onChange={(e) => setRejectReason(e.target.value)} 
                                 className="w-full p-3 border border-slate-200 rounded-xl mb-6 outline-none focus:border-red-400"
@@ -1067,7 +1081,7 @@
                             
                             <div className="flex gap-3">
                                 <button onClick={() => setRejectModal(null)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200">Cancel</button>
-                                <button onClick={handleRejectTask} className="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 shadow-lg shadow-red-200">Confirm Rejection</button>
+                                <button onClick={handleRejectTask} className="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 shadow-lg shadow-red-200">Confirm</button>
                             </div>
                         </div>
                     </div>
@@ -1132,7 +1146,8 @@
                                 
                                 const progress = calculateSubjectProgress(sub);
                                 const isComplete = progress === 100;
-                                const visibleTaskCount = sub.tasks.filter(t => isTaskVisible(sub.id, t)).length;
+                                const subTasks = getSubjectTasks(sub.id);
+                                const visibleTaskCount = subTasks.length;
                                 
                                 return (
                                     <button 
@@ -1186,23 +1201,19 @@
                                 </div>
                                 
                                 <div className="p-4 grid gap-3">
-                                    {selectedSubject.tasks.map((task, i) => {
-                                        if (!isTaskVisible(selectedSubject.id, task)) return null;
-
-                                        const key = getTaskKey(selectedSubject.id, task);
-                                        const isDone = data[key];
-                                        const timestamp = data[`${key}_time`]; 
-                                        const points = calculatePoints(task); 
+                                    {getSubjectTasks(selectedSubject.id).map((task, i) => {
+                                        const isDone = data[task.id];
+                                        const timestamp = data[`${task.id}_time`]; 
+                                        const points = calculatePoints(task.category); 
+                                        const isFlagged = data[`${task.id}_flagged`];
 
                                         let bgClass = 'bg-white border-slate-200';
                                         if (isDone) bgClass = 'bg-green-50 border-green-300 shadow-sm';
-                                        else if (data[`${key}_flagged`]) bgClass = 'bg-yellow-50 border-yellow-300 shadow-sm';
+                                        else if (isFlagged) bgClass = 'bg-yellow-50 border-yellow-300 shadow-sm';
                                         else bgClass = 'bg-white border-slate-200 opacity-70 hover:opacity-100';
 
-                                        const isFlagged = data[`${key}_flagged`];
-
                                         return (
-                                            <div key={key} className={`p-4 rounded-2xl border-2 flex flex-col justify-between gap-3 select-none transition-all ${bgClass}`}>
+                                            <div key={task.id} className={`p-4 rounded-2xl border-2 flex flex-col justify-between gap-3 select-none transition-all ${bgClass}`}>
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex items-start gap-3">
                                                         <div className={`mt-1 w-8 h-8 rounded-xl flex items-center justify-center border-2 transition-colors ${isDone ? 'bg-green-500 border-green-500' : isFlagged ? 'bg-yellow-400 border-yellow-400' : 'bg-white border-slate-300'}`}>
@@ -1210,8 +1221,9 @@
                                                             {isFlagged && <HelpCircle className="w-5 h-5 text-white" />}
                                                         </div>
                                                         <div>
+                                                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">{task.category}</span>
                                                             <span className={`text-lg font-bold block leading-tight ${isDone ? 'text-green-800' : isFlagged ? 'text-yellow-800' : 'text-slate-600'}`}>
-                                                                {task}
+                                                                {task.description}
                                                             </span>
                                                             <div className="flex flex-wrap gap-2 text-xs font-bold mt-1">
                                                                 <span className="uppercase text-slate-400">{points} PTS</span>
@@ -1225,21 +1237,21 @@
                                                 <div className="flex items-center justify-end gap-2 border-t border-slate-100/50 pt-2 mt-auto">
                                                     {!isDone && !isFlagged && (
                                                         <button 
-                                                            onClick={() => startFocusTask(task, points, selectedSubject.icon, selectedSubject.id)}
+                                                            onClick={() => startFocusTask(task)}
                                                             className="text-sm font-bold text-white bg-indigo-500 hover:bg-indigo-600 py-2 px-4 rounded-xl flex items-center gap-1 shadow-sm shadow-indigo-200 btn-press"
                                                         >
                                                             Start <ChevronRight className="w-5 h-5"/>
                                                         </button>
                                                     )}
-                                                    {/* Parent Undo controls normally hidden in student view unless strictly needed, 
-                                                        but leaving accessible here for logic consistency or if student clicks by mistake */}
-                                                    {isDone && (
-                                                         <button onClick={() => undoTask(selectedSubject.id, task, points)} className="text-xs font-bold text-green-600 underline px-2">Undo</button>
-                                                    )}
                                                 </div>
                                             </div>
                                         )
                                     })}
+                                    {getSubjectTasks(selectedSubject.id).length === 0 && (
+                                        <div className="text-center p-8">
+                                            <p className="text-slate-400 font-bold">No tasks assigned for {selectedSubject.label} today.</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -1252,7 +1264,10 @@
                               <div className="bg-slate-50 border-b border-slate-100 p-6 flex justify-between items-center">
                                   <div className="flex items-center gap-3">
                                       {focusTask.icon}
-                                      <h2 className="text-2xl font-black text-slate-800">{focusTask.name}</h2>
+                                      <div>
+                                        <p className="text-xs font-bold text-slate-400 uppercase">{focusTask.category}</p>
+                                        <h2 className="text-xl font-black text-slate-800">{focusTask.description}</h2>
+                                      </div>
                                   </div>
                                   <button onClick={() => setFocusTask(null)} className="p-2 bg-slate-200 rounded-full hover:bg-slate-300 transition-colors">
                                       <X className="w-6 h-6 text-slate-600" />
@@ -1264,7 +1279,7 @@
                                   
                                   <div className="grid grid-cols-2 gap-4 w-full">
                                       <button 
-                                        onClick={() => flagTask(focusTask.subId, focusTask.name)}
+                                        onClick={() => flagTask(focusTask)}
                                         className="py-4 rounded-2xl bg-yellow-100 text-yellow-700 font-black text-lg hover:bg-yellow-200 hover:scale-[1.02] transition-all flex flex-col items-center justify-center gap-1 btn-press"
                                       >
                                         <HelpCircle className="w-8 h-8" />
@@ -1272,7 +1287,7 @@
                                       </button>
                                       
                                       <button 
-                                        onClick={() => completeTask(focusTask.subId, focusTask.name, focusTask.points)}
+                                        onClick={() => completeTask(focusTask)}
                                         className="py-4 rounded-2xl bg-green-500 text-white font-black text-lg shadow-lg shadow-green-200 hover:bg-green-600 hover:scale-[1.02] transition-all flex flex-col items-center justify-center gap-1 btn-press"
                                       >
                                         <CheckCircle2 className="w-8 h-8" />
