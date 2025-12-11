@@ -357,7 +357,7 @@
                       points: 0, 
                       dailyGoal: DEFAULT_GOAL, 
                       activityLog: [], 
-                      visibleSubjects: allSubjectIds,
+                      visibleSubjects: allSubjectIds, 
                       customTasks: initialTasks
                   });
                   setLoading(false);
@@ -543,9 +543,9 @@
               if(!confirm("WARNING: This will permanently delete the entire log for " + dateStr + ". Are you sure?")) return;
               const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
               await deleteDoc(logRef);
-              alert("Log deleted.");
-              // Reload page or reset date to today
-              window.location.reload();
+              alert("Log deleted. The view will reset automatically.");
+              // REMOVED RELOAD TO PREVENT KICKING BACK TO STUDENT VIEW
+              // The onSnapshot listener will detect the deletion and re-initialize a blank day.
           };
 
           const completeTask = async (taskObj) => {
@@ -872,22 +872,22 @@
                                     </div>
                                     
                                     <div className="flex items-center justify-end gap-2 border-t border-slate-100/50 pt-2 mt-auto">
-                                        {isDone && (
-                                            <button onClick={() => { setRejectModal({ taskObj: task }); setDeductionAmount(points); }} className="bg-red-100 hover:bg-red-200 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors">
-                                                <ThumbsDown className="w-3 h-3" /> Reject
-                                            </button>
-                                        )}
-                                        
-                                        {isFlagged && (
-                                            <div className="flex gap-1">
-                                                <button onClick={() => resolveFlag(task, 'approve')} className="bg-green-100 text-green-700 p-2 rounded-lg hover:bg-green-200" title="Mark Done (Award Points)">
-                                                    <Check className="w-4 h-4" />
+                                            {isDone && (
+                                                <button onClick={() => { setRejectModal({ taskObj: task }); setDeductionAmount(points); }} className="bg-red-100 hover:bg-red-200 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors">
+                                                    <ThumbsDown className="w-3 h-3" /> Reject
                                                 </button>
-                                                <button onClick={() => { setRejectModal({ taskObj: task }); setDeductionAmount(0); }} className="bg-red-100 text-red-600 p-2 rounded-lg hover:bg-red-200" title="Reject Help Request">
-                                                    <ThumbsDown className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        )}
+                                            )}
+                                            
+                                            {isFlagged && (
+                                                <div className="flex gap-1">
+                                                    <button onClick={() => resolveFlag(task, 'approve')} className="bg-green-100 text-green-700 p-2 rounded-lg hover:bg-green-200" title="Mark Done (Award Points)">
+                                                        <Check className="w-4 h-4" />
+                                                    </button>
+                                                    <button onClick={() => { setRejectModal({ taskObj: task }); setDeductionAmount(0); }} className="bg-red-100 text-red-600 p-2 rounded-lg hover:bg-red-200" title="Reject Help Request">
+                                                        <ThumbsDown className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            )}
                                     </div>
                                   </div>
                                 )
@@ -1171,7 +1171,7 @@
                                         </div>
                                         
                                         <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mt-2">
-                                           <div className={`h-full bg-gradient-to-r ${sub.color}`} style={{ width: `${progress}%` }} />
+                                            <div className={`h-full bg-gradient-to-r ${sub.color}`} style={{ width: `${progress}%` }} />
                                         </div>
                                     </button>
                                 )
@@ -1373,10 +1373,10 @@
                                       </div>
                                   </div>
                                   <div className="bg-red-50 rounded-xl p-3 mb-4 border border-red-100">
-                                       <p className="text-slate-800 font-bold text-sm">"{alertPopup.message}"</p>
-                                       <p className="text-xs text-red-500 font-bold mt-1 uppercase tracking-wide">
+                                        <p className="text-slate-800 font-bold text-sm">"{alertPopup.message}"</p>
+                                        <p className="text-xs text-red-500 font-bold mt-1 uppercase tracking-wide">
                                             Points Deducted: {alertPopup.amount}
-                                       </p>
+                                        </p>
                                   </div>
                                   <button 
                                     onClick={() => setAlertPopup(null)}
