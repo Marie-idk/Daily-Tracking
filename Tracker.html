@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gabriel's Space - Mission Control</title>
+    <title>Gabriel's Tasksl</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -234,14 +234,14 @@
           "Lesson": 10,
           "Assignment": 10,
           "Video": 5,
-          "Experiment": 15,
+          "Science Experiment": 15, // Fixed key to match CATEGORIES
           "Writing Assignment": 15,
           "Vocabulary": 10,
           "Review": 5,
           "Quiz": 20,
-          "Practice": 10,
-          "Diagram": 10,
-          "Map Activity": 10,
+          "Math Problems": 10, // Added
+          "Essay": 15, // Added
+          "Journal Entry": 10, // Added
           "Check-In": 5,
           "Upload": 10,
           "Mark as Done": 5
@@ -696,16 +696,16 @@
               if (cat === "Video") {
                    return (<div className="w-full bg-indigo-50 border-2 border-indigo-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><PlayCircle className="w-16 h-16 text-indigo-500" /></div><h3 className="text-2xl font-black text-indigo-900">Watch & Learn</h3><p className="text-indigo-700 font-medium text-xl">1. Put on your headphones.<br/>2. Watch the whole video.<br/>3. Don't skip parts.</p></div>);
               }
-              if (cat === "Experiment") {
+              if (cat === "Science Experiment" || cat === "Experiment") {
                    return (<div className="w-full bg-emerald-50 border-2 border-emerald-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><FlaskConical className="w-16 h-16 text-emerald-600" /></div><h3 className="text-2xl font-black text-emerald-900">Science Time</h3><p className="text-emerald-700 font-medium text-xl">Follow the steps carefully.<br/>Write down what you see.</p></div>);
               }
               if (cat === "Map Activity") {
                    return (<div className="w-full bg-purple-50 border-2 border-purple-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><Globe2 className="w-16 h-16 text-purple-600" /></div><h3 className="text-2xl font-black text-purple-900">Map Skills</h3><p className="text-purple-700 font-medium text-xl">Look at the key/legend.<br/>Find the places on the list.</p></div>);
               }
-              if (cat === "Reading" || cat === "Writing Assignment" || cat === "Vocabulary") {
+              if (cat === "Reading" || cat === "Writing Assignment" || cat === "Vocabulary" || cat === "Essay" || cat === "Journal Entry") {
                   return (<div className="w-full bg-yellow-50 border-2 border-yellow-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><BookOpen className="w-16 h-16 text-yellow-600" /></div><h3 className="text-2xl font-black text-yellow-900">Focus on Words</h3><p className="text-yellow-700 font-medium text-xl">Read slowly.<br/>Check your spelling.</p></div>);
               }
-              if (cat === "Quiz") {
+              if (cat === "Quiz" || cat === "Math Problems") {
                   return (<div className="w-full bg-red-50 border-2 border-red-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><Target className="w-16 h-16 text-red-600" /></div><h3 className="text-2xl font-black text-red-900">Quiz Mode</h3><p className="text-red-700 font-medium text-xl">Take a deep breath.<br/>Read every question twice.</p></div>);
               }
               
