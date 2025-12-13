@@ -5,1384 +5,703 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gabriel's Daily Tasks</title>
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- React & ReactDOM -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Babel for JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-    <!-- jsPDF for PDF Generation -->
+    <!-- PDF Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-    <!-- Google Fonts: Fredoka for playfulness, Open Sans for readability -->
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
     <style>
-        body { 
-            font-family: 'Fredoka', sans-serif; 
-            background-color: #fdf2f8; /* Very light pink base */
+        :root {
+            /* Palette Variables */
+            --bg-color: transparent;
+            --card-bg: rgba(255, 255, 255, 0.98);
+            
+            --math-color: #FF2E63;
+            --science-color: #00F5D4;
+            --english-color: #00C2FF;
+            --history-color: #D0FF00;
+            --art-color: #FF9F1C;
+            --purple-color: #9D4EDD;
+            --red-color: #FF0055;
+            
+            --text-main: #2d3748;
+            --text-light: #718096;
+            --radius: 24px;
         }
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        .bg-pastel-gradient {
-            background: linear-gradient(180deg, #fff1f2 0%, #eff6ff 100%);
+        * { box-sizing: border-box; transition: all 0.2s ease; }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
         }
-        .btn-press { transition: transform 0.1s; }
-        .btn-press:active { transform: scale(0.95); }
-        
-        .animate-fall { animation: fall linear forwards; }
-        @keyframes fall { to { transform: translateY(105vh) rotate(720deg); } }
-        
-        /* Neurodivergent friendly: Clear distinct borders */
-        .card-border { border: 3px solid; }
-        
-        /* Select Dropdown Styling */
-        select {
-            appearance: none;
-            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-            background-repeat: no-repeat;
-            background-position: right 0.7rem top 50%;
-            background-size: 0.65rem auto;
+
+        /* --- Main Layout --- */
+        #app-container {
+            width: 100%;
+            max-width: 1000px; /* Bigger width */
+            background-color: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 40px; /* More padding */
+            box-shadow: 
+                0 0 25px rgba(255, 46, 99, 0.15), 
+                0 0 50px rgba(0, 194, 255, 0.1),
+                0 10px 30px rgba(0,0,0,0.05);
+            border: 3px solid rgba(255,255,255,0.8);
+            backdrop-filter: blur(10px);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
         }
+
+        /* --- Typography --- */
+        h1, h2, h3 { font-family: 'Fredoka', sans-serif; margin: 0; }
+        
+        .title-gradient {
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, var(--math-color), var(--art-color), var(--english-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline-block;
+            letter-spacing: -1px;
+        }
+
+        .subtitle { font-size: 1.1rem; color: var(--text-light); font-weight: 700; margin-top: 5px; }
+
+        /* --- Header & Controls --- */
+        header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; 
+            padding-bottom: 25px; 
+            border-bottom: 2px solid #edf2f7; 
+        }
+
+        .header-actions { display: flex; gap: 15px; }
+
+        .btn-icon {
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            border: 2px solid #edf2f7;
+            background: white;
+            font-size: 1.2rem;
+            color: var(--text-light);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn-icon:hover { transform: scale(1.1); border-color: var(--english-color); color: var(--english-color); }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 20px;
+            background: #edf2f7;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-top: 10px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--science-color), var(--english-color));
+            width: 0%;
+            transition: width 1s ease-out;
+        }
+
+        /* --- Subject Grid (Big Cards) --- */
+        .subject-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .subject-card {
+            background: white;
+            border: 2px solid transparent;
+            border-radius: 20px;
+            padding: 25px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 160px;
+        }
+        .subject-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+        
+        .subject-icon {
+            width: 50px; height: 50px;
+            border-radius: 15px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .subject-title { font-size: 1.3rem; font-weight: 700; color: var(--text-main); }
+        .subject-meta { font-size: 0.9rem; color: var(--text-light); font-weight: 700; margin-top: 5px; }
+
+        .complete-badge {
+            position: absolute; top: 15px; right: 15px;
+            background: #f0fff4; color: #00a890;
+            padding: 5px 10px; border-radius: 15px;
+            font-size: 0.8rem; font-weight: 800;
+            border: 1px solid #b9f6ca;
+        }
+
+        /* --- Task List --- */
+        #task-view { display: none; animation: fadeIn 0.3s ease; }
+        .task-list { display: grid; gap: 15px; }
+        
+        .task-item {
+            background: white;
+            border: 2px solid #edf2f7;
+            border-radius: 18px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+        .task-item:hover { border-color: var(--english-color); transform: scale(1.01); }
+        .task-item.completed { background: #f0fff4; border-color: #b9f6ca; opacity: 0.8; }
+
+        .task-check {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            border: 3px solid #edf2f7;
+            margin-right: 15px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; color: white;
+        }
+        .task-item.completed .task-check { background: var(--science-color); border-color: var(--science-color); }
+
+        .task-info h4 { font-size: 1.2rem; color: var(--text-main); margin: 0; }
+        .task-info p { margin: 5px 0 0 0; font-size: 0.95rem; color: var(--text-light); }
+        
+        .task-points {
+            font-weight: 800; font-size: 0.9rem;
+            background: #edf2f7; padding: 5px 10px; border-radius: 10px;
+            color: var(--text-light);
+        }
+
+        /* --- Focus Modal --- */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal.active { display: flex; animation: zoomIn 0.2s ease; }
+        
+        .modal-card {
+            background: white;
+            width: 90%; max-width: 600px;
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            border: 4px solid white;
+            text-align: center;
+            position: relative;
+        }
+
+        .modal-icon {
+            width: 80px; height: 80px;
+            border-radius: 25px;
+            margin: 0 auto 20px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; color: white;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .btn-large {
+            width: 100%; padding: 18px;
+            border-radius: 20px; border: none;
+            font-size: 1.2rem; font-weight: 800; font-family: 'Fredoka', sans-serif;
+            cursor: pointer; margin-top: 15px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .btn-success { background: linear-gradient(135deg, var(--science-color), var(--english-color)); color: white; }
+        .btn-help { background: white; border: 3px solid var(--art-color); color: var(--art-color); }
+        
+        .btn-back { 
+            background: #edf2f7; color: var(--text-light); border: none; 
+            padding: 10px 20px; border-radius: 12px; font-weight: 700; cursor: pointer;
+            margin-bottom: 20px; display: inline-flex; align-items: center; gap: 8px;
+        }
+
+        /* --- Parent View --- */
+        .parent-container { display: none; flex-direction: column; gap: 20px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        input, select, textarea {
+            width: 100%; padding: 15px; border-radius: 12px; border: 2px solid #edf2f7;
+            font-family: 'Nunito', sans-serif; font-size: 1rem; background: #fcfcfc;
+        }
+        
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .confetti { position: fixed; width: 10px; height: 10px; animation: fall linear forwards; z-index: 2000; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
+
+        /* Loading */
+        #loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); z-index: 500; display: flex; justify-content: center; align-items: center; border-radius: var(--radius); }
+        .spinner { border: 5px solid #edf2f7; border-top: 5px solid var(--math-color); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .hidden { display: none !important; }
     </style>
 </head>
-<body class="bg-pastel-gradient min-h-screen text-slate-700 selection:bg-pink-200">
-    <div id="root"></div>
+<body>
 
-    <script type="text/babel" data-type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { 
-            getAuth, 
-            signInAnonymously, 
-            onAuthStateChanged 
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { 
-            getFirestore, 
-            doc, 
-            setDoc, 
-            onSnapshot, 
-            updateDoc, 
-            collection, 
-            getDocs, 
-            query, 
-            deleteField,
-            deleteDoc
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+<div id="app-container">
+    <div id="loading-overlay"><div class="spinner"></div></div>
 
-        const { useState, useEffect, createElement } = React;
-        const { jsPDF } = window.jspdf;
+    <!-- Header -->
+    <header>
+        <div>
+            <h1 class="title-gradient">Gabriel's Space</h1>
+            <div class="subtitle">Assignments for <span id="display-date"></span></div>
+        </div>
+        <div class="header-actions">
+            <button class="btn-icon" onclick="app.generatePDF()" title="Download Report"><i class="fas fa-file-pdf"></i></button>
+            <button class="btn-icon" onclick="app.showPinEntry()" title="Parent Mode"><i class="fas fa-cog"></i></button>
+        </div>
+    </header>
 
-        // --- ICONS (Lucide Style) ---
-        const IconBase = ({ d, className, ...props }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-                {d}
-            </svg>
-        );
+    <!-- Progress -->
+    <div style="background: white; padding: 20px; border-radius: 20px; border: 2px solid #edf2f7;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+            <div style="font-weight: 800; color: var(--text-light); text-transform: uppercase; font-size: 0.9rem;">Daily Progress</div>
+            <div style="font-family: 'Fredoka'; font-size: 1.5rem; color: var(--text-main);"><span id="points-display">0</span> / <span id="goal-display">50</span> pts</div>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="progress-fill"></div>
+        </div>
+    </div>
 
-        // Icons
-        const BookOpen = (p) => <IconBase {...p} d={<><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></>} />;
-        const Calculator = (p) => <IconBase {...p} d={<><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></>} />;
-        const FlaskConical = (p) => <IconBase {...p} d={<><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></>} />;
-        const Globe2 = (p) => <IconBase {...p} d={<><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></>} />;
-        const Palette = (p) => <IconBase {...p} d={<><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></>} />;
-        const Music = (p) => <IconBase {...p} d={<><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></>} />;
-        const Activity = (p) => <IconBase {...p} d={<><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></>} />;
-        const Lock = (p) => <IconBase {...p} d={<><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>} />;
-        const Settings = (p) => <IconBase {...p} d={<><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></>} />;
-        const X = (p) => <IconBase {...p} d={<><path d="M18 6 6 18"/><path d="m6 6 12 12"/></>} />;
-        const CheckCircle2 = (p) => <IconBase {...p} d={<><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></>} />;
-        const Trophy = (p) => <IconBase {...p} d={<><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></>} />;
-        const PlayCircle = (p) => <IconBase {...p} d={<><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></>} />;
-        const Trash2 = (p) => <IconBase {...p} d={<><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></>} />;
-        const AlertTriangle = (p) => <IconBase {...p} d={<><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></>} />;
-        const ShieldCheck = (p) => <IconBase {...p} d={<><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></>} />;
-        const Megaphone = (p) => <IconBase {...p} d={<><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></>} />;
-        const AlertCircle = (p) => <IconBase {...p} d={<><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></>} />;
-        const ArrowLeft = (p) => <IconBase {...p} d={<><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></>} />;
-        const UserCog = (p) => <IconBase {...p} d={<><circle cx="18" cy="15" r="3"/><circle cx="9" cy="7" r="4"/><path d="M10 15H6a4 4 0 0 0-4 4v2"/><path d="m21.7 16.4.9-.9"/><path d="m15.3 13.6.9-.9"/><path d="m19.9 13.6-.9-.9"/><path d="m13.5 16.4-.9-.9"/></>} />;
-        const Gamepad2 = (p) => <IconBase {...p} d={<><line x1="6" x2="10" y1="12" y2="12"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="15" x2="15.01" y1="13" y2="13"/><line x1="18" x2="18.01" y1="11" y2="11"/><rect width="20" height="12" x="2" y="6" rx="2"/></>} />;
-        const History = (p) => <IconBase {...p} d={<><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 12"/><path d="M3 3v9h9"/><path d="M12 7v5l3 3"/></>} />;
-        const ThumbsDown = (p) => <IconBase {...p} d={<><path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.07zm0-6h6"/></>} />;
-        const Clock = (p) => <IconBase {...p} d={<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>} />;
-        const ClipboardCheck = (p) => <IconBase {...p} d={<><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></>} />;
-        const Target = (p) => <IconBase {...p} d={<><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></>} />;
-        const List = (p) => <IconBase {...p} d={<><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></>} />;
-        const ScrollText = (p) => <IconBase {...p} d={<><path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4"/><path d="M19 17V5a2 2 0 0 0-2-2H4"/></>} />;
-        const CalendarCheck = (p) => <IconBase {...p} d={<><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="m9 16 2 2 4-4"/></>} />;
-        const Eye = (p) => <IconBase {...p} d={<><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></>} />;
-        const EyeOff = (p) => <IconBase {...p} d={<><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7c.44 0 .87-.03 1.28-.09"/><line x1="2" x2="22" y1="2" y2="22"/></>} />;
-        const RotateCcw = (p) => <IconBase {...p} d={<><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 12"/><path d="M3 3v9h9"/></>} />;
-        const HelpCircle = (p) => <IconBase {...p} d={<><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></>} />;
-        const Check = (p) => <IconBase {...p} d={<><path d="M20 6 9 17l-5-5"/></>} />;
-        const ChevronDown = (p) => <IconBase {...p} d={<><path d="m6 9 6 6 6-6"/></>} />;
-        const ChevronRight = (p) => <IconBase {...p} d={<><path d="m9 18 6-6-6-6"/></>} />;
-        const FileDown = (p) => <IconBase {...p} d={<><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/></>} />;
-        const Plus = (p) => <IconBase {...p} d={<><path d="M5 12h14"/><path d="M12 5v14"/></>} />;
+    <!-- STUDENT VIEW: Subject Grid -->
+    <div id="subject-view" class="subject-grid">
+        <!-- Injected via JS -->
+    </div>
 
-        // --- FIREBASE CONFIGURATION ---
-        const firebaseConfig = {
-          apiKey: "AIzaSyAetTXNbMWQtI_RBa8UfQmOsyBe_IRNp_k",
-          authDomain: "point-tracker-b314f.firebaseapp.com",
-          projectId: "point-tracker-b314f",
-          storageBucket: "point-tracker-b314f.firebasestorage.app",
-          messagingSenderId: "169392724174",
-          appId: "1:169392724174:web:3ba4d6fe5292496d9d989f"
-        };
+    <!-- STUDENT VIEW: Task List (Hidden initially) -->
+    <div id="task-view">
+        <button class="btn-back" onclick="app.showSubjects()"><i class="fas fa-arrow-left"></i> Back to Subjects</button>
+        <h2 id="task-view-title" style="margin-bottom: 20px; font-size: 1.8rem; color: var(--text-main);">Subject</h2>
+        <div id="task-list-container" class="task-list">
+            <!-- Injected via JS -->
+        </div>
+    </div>
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        const appId = 'gabriels-tracker-master-persistent'; 
-        const DATA_COLLECTION = "daily_logs";
-        const SETTINGS_COLLECTION = "settings";
-
-        const STUDENT_NAME = "Gabriel Mendoza";
-        const DEFAULT_GOAL = 50;
-
-        const getLocalISODate = (d = new Date()) => {
-            const offset = d.getTimezoneOffset() * 60000;
-            return new Date(d.getTime() - offset).toISOString().split('T')[0];
-        };
-
-        // --- CONSTANTS ---
-        const SUBJECTS = [
-          { 
-            id: 'english', 
-            label: 'English', 
-            icon: <BookOpen className="w-8 h-8 text-pink-600" />, 
-            color: 'from-pink-300 to-rose-200', 
-            borderColor: 'border-pink-300',
-            btnColor: 'bg-pink-100 text-pink-700'
-          },
-          { 
-            id: 'math', 
-            label: 'Math', 
-            icon: <Calculator className="w-8 h-8 text-blue-600" />, 
-            color: 'from-blue-300 to-cyan-200', 
-            borderColor: 'border-blue-300',
-            btnColor: 'bg-blue-100 text-blue-700'
-          },
-          { 
-            id: 'science', 
-            label: 'Science', 
-            icon: <FlaskConical className="w-8 h-8 text-green-600" />, 
-            color: 'from-emerald-300 to-green-200', 
-            borderColor: 'border-green-300',
-            btnColor: 'bg-green-100 text-green-700'
-          },
-          { 
-            id: 'social', 
-            label: 'Social Studies', 
-            icon: <Globe2 className="w-8 h-8 text-purple-600" />, 
-            color: 'from-purple-300 to-violet-200', 
-            borderColor: 'border-purple-300',
-            btnColor: 'bg-purple-100 text-purple-700'
-          },
-          { 
-            id: 'art', 
-            label: 'Art', 
-            icon: <Palette className="w-8 h-8 text-orange-600" />, 
-            color: 'from-orange-300 to-amber-200', 
-            borderColor: 'border-orange-300',
-            btnColor: 'bg-orange-100 text-orange-700'
-          },
-          { 
-            id: 'music', 
-            label: 'Music', 
-            icon: <Music className="w-8 h-8 text-teal-600" />, 
-            color: 'from-teal-300 to-cyan-200', 
-            borderColor: 'border-teal-300',
-            btnColor: 'bg-teal-100 text-teal-700'
-          },
-          { 
-            id: 'pe', 
-            label: 'PE / Health', 
-            icon: <Activity className="w-8 h-8 text-red-600" />, 
-            color: 'from-red-300 to-orange-200', 
-            borderColor: 'border-red-300',
-            btnColor: 'bg-red-100 text-red-700'
-          }
-        ];
-
-        const CATEGORIES = [
-           "Lesson",
-           "Assignment",
-           "Vocabulary",
-           "Math Problems",
-           "Video",
-           "Review",
-           "Science Experiment",
-           "Essay",
-           "Journal Entry",
-           "Quiz",
-           "Writing Assignment",
-           "Check-In",
-           "Upload",
-           "Mark as Done"
-        ];
-
-        const POINTS_BY_CATEGORY = {
-          "Lesson": 10,
-          "Assignment": 10,
-          "Video": 5,
-          "Science Experiment": 15, // Fixed key to match CATEGORIES
-          "Writing Assignment": 15,
-          "Vocabulary": 10,
-          "Review": 5,
-          "Quiz": 20,
-          "Math Problems": 10, // Added
-          "Essay": 15, // Added
-          "Journal Entry": 10, // Added
-          "Check-In": 5,
-          "Upload": 10,
-          "Mark as Done": 5
-        };
-
-        const calculatePoints = (category) => {
-            return POINTS_BY_CATEGORY[category] || 5;
-        };
-
-        const Confetti = ({ active }) => {
-          if (!active) return null;
-          return (
-            <div className="fixed inset-0 pointer-events-none z-[100] overflow-hidden">
-              {[...Array(30)].map((_, i) => (
-                <div
-                  key={i}
-                  className="absolute animate-fall"
-                  style={{
-                    left: `${Math.random() * 100}%`,
-                    top: `-5%`,
-                    animationDuration: `${Math.random() * 2 + 1.5}s`,
-                    animationDelay: `${Math.random() * 0.5}s`,
-                    backgroundColor: ['#FFD700', '#FF69B4', '#00BFFF', '#32CD32', '#FF4500'][Math.floor(Math.random() * 5)],
-                    width: `${Math.random() * 10 + 5}px`,
-                    height: `${Math.random() * 10 + 5}px`,
-                    borderRadius: Math.random() > 0.5 ? '50%' : '2px',
-                    transform: `rotate(${Math.random() * 360}deg)`
-                  }}
-                />
-              ))}
+    <!-- PARENT VIEW (Hidden initially) -->
+    <div id="parent-view" class="parent-container">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2 style="color: var(--text-main);">Mission Control</h2>
+            <button class="btn-back" onclick="app.showSubjects()">Exit</button>
+        </div>
+        
+        <div style="background:white; padding:25px; border-radius:20px; border:2px solid #edf2f7;">
+            <h3 style="margin-bottom:15px; color:var(--english-color);">Add New Task</h3>
+            <div class="form-row">
+                <select id="new-task-subject">
+                    <!-- Populated -->
+                </select>
+                <select id="new-task-category">
+                    <!-- Populated -->
+                </select>
             </div>
-          );
-        };
+            <input type="text" id="new-task-title" placeholder="Title (e.g. Chapter 4 Review)" style="margin-top:15px;">
+            <textarea id="new-task-desc" placeholder="Instructions..." style="margin-top:15px; height:80px; resize:none;"></textarea>
+            <button onclick="app.addTask()" class="btn-large" style="background: var(--english-color); color: white; margin-top:20px;">
+                <i class="fas fa-plus"></i> Add Task
+            </button>
+        </div>
 
-        function App() {
-          const [user, setUser] = useState(null);
-          const [loading, setLoading] = useState(true);
-          const [authError, setAuthError] = useState(null);
-          
-          const [dateStr, setDateStr] = useState(getLocalISODate());
-          
-          const [data, setData] = useState({});
-          const [history, setHistory] = useState([]);
-          const [settings, setSettings] = useState({});
-          const [showConfetti, setShowConfetti] = useState(false);
-          const [alertPopup, setAlertPopup] = useState(null);
-            
-          const [viewMode, setViewMode] = useState('student');
-          const [pinInput, setPinInput] = useState("");
-            
-          const [selectedSubject, setSelectedSubject] = useState(null);
-          const [focusTask, setFocusTask] = useState(null);
-            
-          const [rejectModal, setRejectModal] = useState(null);
-          const [rejectReason, setRejectReason] = useState("");
-          const [deductionAmount, setDeductionAmount] = useState(0); 
-          
-          const [newGoal, setNewGoal] = useState(DEFAULT_GOAL);
-          const [viewingHistoryLog, setViewingHistoryLog] = useState(null); 
-          const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-          const [expandedSubjects, setExpandedSubjects] = useState({});
-          
-          const [showStudentLog, setShowStudentLog] = useState(false);
+        <div style="background:white; padding:25px; border-radius:20px; border:2px solid #edf2f7;">
+            <h3 style="margin-bottom:15px; color:var(--text-light);">Reset / Manage</h3>
+            <button onclick="app.resetDay()" style="color: var(--art-color); background:none; border:none; font-weight:800; cursor:pointer;"><i class="fas fa-undo"></i> Reset Today's Points</button>
+        </div>
+    </div>
 
-          // State for Task Creation in Modal
-          const [newTaskSubject, setNewTaskSubject] = useState(null);
-          const [newTaskCategory, setNewTaskCategory] = useState("Lesson");
-          const [newTaskTitle, setNewTaskTitle] = useState("");
-          const [newTaskDesc, setNewTaskDesc] = useState("");
+</div>
 
-          useEffect(() => {
-            const initAuth = async () => {
-              try {
-                await signInAnonymously(auth);
-              } catch (error) {
-                console.error("Authentication Error:", error);
-                setAuthError(error.message);
-              }
-            };
-            initAuth();
-            const unsubAuth = onAuthStateChanged(auth, (u) => {
-                setUser(u);
-                if (u) setAuthError(null);
-            });
-            return () => unsubAuth();
-          }, []);
+<!-- PIN MODAL -->
+<div id="pin-modal" class="modal">
+    <div class="modal-card" style="max-width: 400px;">
+        <i class="fas fa-lock" style="font-size: 3rem; color: var(--text-light); margin-bottom: 20px;"></i>
+        <h2 style="margin-bottom: 10px;">Parent Access</h2>
+        <input type="password" id="pin-input" maxlength="4" style="text-align: center; font-size: 2rem; letter-spacing: 10px; margin-bottom: 20px;">
+        <button onclick="app.verifyPin()" class="btn-large" style="background: var(--text-main); color: white;">Unlock</button>
+        <button onclick="app.closeModal('pin-modal')" style="margin-top: 15px; background: none; border: none; color: var(--text-light); font-weight: 700; cursor: pointer;">Cancel</button>
+    </div>
+</div>
 
-          useEffect(() => {
-            if (!user) return;
+<!-- FOCUS TASK MODAL -->
+<div id="focus-modal" class="modal">
+    <div class="modal-card">
+        <div id="focus-icon" class="modal-icon"></div>
+        <div style="text-transform: uppercase; font-weight: 800; color: var(--text-light); font-size: 0.9rem;" id="focus-category">CATEGORY</div>
+        <h2 id="focus-title" style="font-size: 2.2rem; margin: 10px 0;">Task Title</h2>
+        <p id="focus-desc" style="font-size: 1.2rem; color: var(--text-light); margin-bottom: 30px;">Description goes here.</p>
+        
+        <button onclick="app.completeTask()" class="btn-large btn-success">
+            <i class="fas fa-check-circle"></i> I'm Done!
+        </button>
+        <button onclick="app.flagTask()" class="btn-large btn-help">
+            <i class="fas fa-hand-paper"></i> I need a hint
+        </button>
+        <button onclick="app.closeModal('focus-modal')" style="margin-top: 15px; background: none; border: none; color: var(--text-light); font-weight: 700; cursor: pointer;">Close</button>
+    </div>
+</div>
 
-            const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
-            const unsubData = onSnapshot(logRef, (docSnap) => {
-              if (docSnap.exists()) {
-                const newData = docSnap.data();
-                setData(newData);
-                setNewGoal(newData.dailyGoal || DEFAULT_GOAL);
-                setLoading(false);
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, setDoc, onSnapshot, updateDoc, collection, deleteField, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-                if (viewMode === 'student' && newData.latestAlert) {
-                    const seenAlerts = JSON.parse(localStorage.getItem('seenAlerts') || '[]');
-                    if (!seenAlerts.includes(newData.latestAlert.id)) {
-                        setAlertPopup(newData.latestAlert);
-                        localStorage.setItem('seenAlerts', JSON.stringify([...seenAlerts, newData.latestAlert.id]));
-                    }
+    // --- CONFIGURATION ---
+    // Injecting User's specific Firebase Configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyAetTXNbMWQtI_RBa8UfQmOsyBe_IRNp_k",
+        authDomain: "point-tracker-b314f.firebaseapp.com",
+        projectId: "point-tracker-b314f",
+        storageBucket: "point-tracker-b314f.firebasestorage.app",
+        messagingSenderId: "169392724174",
+        appId: "1:169392724174:web:3ba4d6fe5292496d9d989f"
+    };
+
+    // RENAMED TO AVOID CONFLICT
+    const firebaseApp = initializeApp(firebaseConfig);
+    const db = getFirestore(firebaseApp);
+    const auth = getAuth(firebaseApp);
+    
+    // Global State
+    const state = {
+        user: null,
+        data: {},
+        dateStr: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+        currentSubject: null,
+        currentTask: null,
+        appId: typeof __app_id !== 'undefined' ? __app_id : 'gabriels-tracker-v1'
+    };
+
+    const SUBJECTS = [
+        { id: 'math', label: 'Math', icon: 'fa-calculator', color: 'var(--math-color)' },
+        { id: 'english', label: 'English', icon: 'fa-book-open', color: 'var(--english-color)' },
+        { id: 'science', label: 'Science', icon: 'fa-flask', color: 'var(--science-color)' },
+        { id: 'history', label: 'History', icon: 'fa-globe-americas', color: 'var(--history-color)' },
+        { id: 'art', label: 'Art', icon: 'fa-palette', color: 'var(--art-color)' },
+        { id: 'pe', label: 'PE / Health', icon: 'fa-heart-pulse', color: 'var(--red-color)' },
+        { id: 'music', label: 'Music', icon: 'fa-music', color: 'var(--purple-color)' }
+    ];
+
+    const CATEGORIES = ["Lesson", "Worksheet", "Quiz", "Video", "Reading", "Experiment"];
+
+    // --- INITIALIZATION ---
+    window.app = {
+        init: async () => {
+            // SAFETY 1: Force remove loader after 3 seconds if connection hangs
+            setTimeout(() => {
+                const loader = document.getElementById('loading-overlay');
+                if(loader && !loader.classList.contains('hidden')) {
+                    loader.classList.add('hidden');
+                    console.log("Forced loader removal.");
                 }
-              } else {
-                const allSubjectIds = SUBJECTS.map(s => s.id);
-                // Initialize with empty custom tasks structure
-                const initialTasks = {};
-                SUBJECTS.forEach(s => initialTasks[s.id] = []);
+            }, 3000);
 
-                setDoc(logRef, { 
-                    points: 0, 
-                    dailyGoal: DEFAULT_GOAL, 
-                    activityLog: [],
-                    visibleSubjects: allSubjectIds,
-                    customTasks: initialTasks
-                }).then(() => {
-                  setData({ 
-                      points: 0, 
-                      dailyGoal: DEFAULT_GOAL, 
-                      activityLog: [], 
-                      visibleSubjects: allSubjectIds, 
-                      customTasks: initialTasks
-                  });
-                  setLoading(false);
-                });
-              }
-            }, (error) => {
-               console.error("Data Sync Error:", error);
-               if (error.code === 'permission-denied') {
-                  setAuthError("Permission Denied: Check Firestore Security Rules.");
-               }
+            // SAFETY 2: AUTH FIX - Skip incompatible token and use Anonymous sign-in for the custom project.
+            try {
+                // Ignore __initial_auth_token because it belongs to a different project
+                await signInAnonymously(auth);
+            } catch (e) { 
+                console.error("Auth failed (Anonymous fallback):", e);
+                // Ensure we continue even if auth fails (UI will show empty state)
+                document.getElementById('loading-overlay').classList.add('hidden');
+            }
+
+            onAuthStateChanged(auth, (u) => {
+                state.user = u;
+                if (u) app.subscribeData();
+                else document.getElementById('loading-overlay').classList.add('hidden');
             });
 
-            const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', SETTINGS_COLLECTION, 'global');
-            const unsubSettings = onSnapshot(settingsRef, (docSnap) => {
-              if (docSnap.exists()) setSettings(docSnap.data());
-            });
-
-            return () => { unsubData(); unsubSettings(); };
-          }, [user, dateStr, viewMode]);
-
-          useEffect(() => {
-            if (viewMode === 'parent' && user) {
-                const fetchHistory = async () => {
-                    const q = query(collection(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION));
-                    const querySnapshot = await getDocs(q);
-                    const hist = [];
-                    querySnapshot.forEach((doc) => {
-                        hist.push({ date: doc.id, ...doc.data() });
-                    });
-                    hist.sort((a,b) => new Date(b.date) - new Date(a.date));
-                    setHistory(hist);
-                };
-                fetchHistory();
-            }
-          }, [viewMode, user]);
-
-          const isSubjectVisible = (subId) => {
-              if (!data.visibleSubjects) return true; 
-              return data.visibleSubjects.includes(subId);
-          };
-
-          const getSubjectTasks = (subId) => {
-            if (data.customTasks && data.customTasks[subId]) {
-                return data.customTasks[subId];
-            }
-            return [];
-          };
-
-          const calculateSubjectProgress = (sub) => {
-            const subTasks = getSubjectTasks(sub.id);
-            const totalSteps = subTasks.length;
-            if (totalSteps === 0) return 100;
-
-            let completed = 0;
-            subTasks.forEach(t => { 
-                if (data[t.id]) completed++; 
-            });
-            return Math.round((completed / totalSteps) * 100);
-          };
-
-          const triggerConfetti = () => {
-            setShowConfetti(true);
-            setTimeout(() => setShowConfetti(false), 2500);
-          };
-
-          const handleDownloadPDF = () => {
-             try {
-                const doc = new jsPDF();
-                doc.setFont("Helvetica", "bold");
-                doc.setFontSize(18);
-                doc.text(STUDENT_NAME, 20, 20); 
-                doc.setFontSize(12);
-                doc.setFont("Helvetica", "normal");
-                doc.text(`Date: ${new Date(dateStr).toLocaleDateString()}`, 20, 30);
-                doc.setLineWidth(0.5);
-                doc.line(20, 35, 190, 35);
-                doc.setFontSize(14);
-                doc.setFont("Helvetica", "bold");
-                doc.text("Daily Progress Report", 20, 45);
-                let yPos = 55;
-                doc.setFontSize(12);
-                doc.setFont("Helvetica", "normal");
-                doc.text(`Total Points Earned: ${data.points || 0}`, 20, yPos);
-                yPos += 10;
-                doc.text(`Daily Goal: ${data.dailyGoal || DEFAULT_GOAL}`, 20, yPos);
-                yPos += 15;
-                
-                // Print tasks by subject
-                SUBJECTS.forEach(sub => {
-                   const tasks = getSubjectTasks(sub.id);
-                   if (tasks.length > 0) {
-                       if (yPos > 270) { doc.addPage(); yPos = 20; }
-                       doc.setFont("Helvetica", "bold");
-                       doc.text(sub.label, 20, yPos);
-                       yPos += 7;
-                       doc.setFont("Helvetica", "normal");
-                       
-                       tasks.forEach(task => {
-                           const isDone = data[task.id];
-                           const status = isDone ? "[DONE]" : "[ ]";
-                           const pts = calculatePoints(task.category);
-                           const titleText = task.title ? `${task.title}: ` : "";
-                           doc.text(`${status} ${task.category}: ${titleText}${task.description} (${pts} pts)`, 25, yPos);
-                           yPos += 6;
-                       });
-                       yPos += 5;
-                   }
-                });
-
-                doc.save(`${STUDENT_NAME.replace(' ', '_')}_${dateStr}.pdf`);
-                triggerConfetti(); 
-             } catch (e) {
-                 console.error("PDF Error", e);
-                 alert("Could not generate PDF.");
-             }
-          };
-
-          const updateDailyGoal = async () => {
-              if(!user) return;
-              const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
-              await updateDoc(logRef, { dailyGoal: parseInt(newGoal) });
-              alert("Daily goal updated!");
-          };
-
-          const toggleSubjectVisibility = async (subId) => {
-              if(!user) return;
-              const currentVisible = data.visibleSubjects || SUBJECTS.map(s => s.id);
-              let newVisible;
-              if (currentVisible.includes(subId)) {
-                  newVisible = currentVisible.filter(id => id !== subId);
-              } else {
-                  newVisible = [...currentVisible, subId];
-              }
-              const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
-              await updateDoc(logRef, { visibleSubjects: newVisible });
-          };
-
-          // --- Task Management Functions ---
-
-          const addTask = async () => {
-            if (!newTaskSubject || !newTaskTitle || !newTaskDesc) {
-                alert("Please select a subject and fill in title and description.");
-                return;
-            }
+            // Set Date Display
+            const dateObj = new Date();
+            document.getElementById('display-date').innerText = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
             
-            const tasks = getSubjectTasks(newTaskSubject);
-            if (tasks.length >= 6) {
-                alert("Maximum 6 tasks allowed per subject.");
+            // Populate Selects
+            const subSelect = document.getElementById('new-task-subject');
+            SUBJECTS.forEach(s => subSelect.innerHTML += `<option value="${s.id}">${s.label}</option>`);
+            const catSelect = document.getElementById('new-task-category');
+            CATEGORIES.forEach(c => catSelect.innerHTML += `<option value="${c}">${c}</option>`);
+        },
+
+        subscribeData: () => {
+            // Path: artifacts/{appId}/public/data/daily_logs/{date}
+            const docRef = doc(db, 'artifacts', state.appId, 'public', 'data', 'daily_logs', state.dateStr);
+            onSnapshot(docRef, (snap) => {
+                document.getElementById('loading-overlay').classList.add('hidden');
+                if (snap.exists()) {
+                    state.data = snap.data();
+                } else {
+                    // Initialize if empty
+                    const initial = { points: 0, dailyGoal: 50, tasks: [] };
+                    setDoc(docRef, initial);
+                    state.data = initial;
+                }
+                app.render();
+            }, (error) => {
+                console.error("Snapshot error:", error);
+                document.getElementById('loading-overlay').classList.add('hidden');
+            });
+        },
+
+        render: () => {
+            // Progress
+            const points = state.data.points || 0;
+            const goal = state.data.dailyGoal || 50;
+            document.getElementById('points-display').innerText = points;
+            document.getElementById('goal-display').innerText = goal;
+            const pct = Math.min(100, (points / goal) * 100);
+            document.getElementById('progress-fill').style.width = `${pct}%`;
+
+            // Subject Grid
+            const grid = document.getElementById('subject-view');
+            grid.innerHTML = '';
+            
+            SUBJECTS.forEach(sub => {
+                const tasks = (state.data.tasks || []).filter(t => t.subject === sub.id);
+                const completed = tasks.filter(t => t.completed).length;
+                const isDone = tasks.length > 0 && completed === tasks.length;
+                
+                const card = document.createElement('div');
+                card.className = 'subject-card';
+                card.style.borderColor = isDone ? 'var(--science-color)' : 'transparent';
+                if(isDone) card.style.background = '#f0fff4';
+                
+                card.innerHTML = `
+                    ${isDone ? '<div class="complete-badge"><i class="fas fa-check"></i> DONE</div>' : ''}
+                    <div class="subject-icon" style="background: ${sub.color};">
+                        <i class="fas ${sub.icon}"></i>
+                    </div>
+                    <div>
+                        <div class="subject-title">${sub.label}</div>
+                        <div class="subject-meta">${completed} / ${tasks.length} Activities</div>
+                    </div>
+                `;
+                card.onclick = () => app.openSubject(sub.id);
+                grid.appendChild(card);
+            });
+
+            // Re-render task list if open
+            if (state.currentSubject) {
+                app.renderTasks(state.currentSubject);
+            }
+        },
+
+        openSubject: (subId) => {
+            state.currentSubject = subId;
+            document.getElementById('subject-view').style.display = 'none';
+            document.getElementById('task-view').style.display = 'block';
+            
+            const sub = SUBJECTS.find(s => s.id === subId);
+            document.getElementById('task-view-title').innerText = sub.label;
+            document.getElementById('task-view-title').style.color = sub.color;
+            
+            app.renderTasks(subId);
+        },
+
+        showSubjects: () => {
+            state.currentSubject = null;
+            document.getElementById('task-view').style.display = 'none';
+            document.getElementById('parent-view').style.display = 'none';
+            document.getElementById('subject-view').style.display = 'grid';
+        },
+
+        renderTasks: (subId) => {
+            const list = document.getElementById('task-list-container');
+            list.innerHTML = '';
+            const tasks = (state.data.tasks || []).filter(t => t.subject === subId);
+            const sub = SUBJECTS.find(s => s.id === subId);
+
+            if (tasks.length === 0) {
+                list.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-light); font-weight:700;">No tasks assigned for ${sub.label} yet.</div>`;
                 return;
             }
+
+            tasks.forEach(task => {
+                const item = document.createElement('div');
+                item.className = `task-item ${task.completed ? 'completed' : ''}`;
+                item.innerHTML = `
+                    <div style="display:flex; align-items:center;">
+                        <div class="task-check" style="${task.completed ? '' : 'background:#edf2f7;'}">
+                            ${task.completed ? '<i class="fas fa-check"></i>' : ''}
+                        </div>
+                        <div class="task-info">
+                            <span style="font-size:0.8rem; font-weight:800; color:${sub.color}; text-transform:uppercase;">${task.category}</span>
+                            <h4>${task.title}</h4>
+                            <p>${task.description || ''}</p>
+                        </div>
+                    </div>
+                    <div class="task-points">${task.points || 10} PTS</div>
+                `;
+                item.onclick = () => {
+                    if (!task.completed) app.openFocus(task);
+                };
+                list.appendChild(item);
+            });
+        },
+
+        openFocus: (task) => {
+            state.currentTask = task;
+            const sub = SUBJECTS.find(s => s.id === task.subject);
+            
+            document.getElementById('focus-icon').style.backgroundColor = sub.color;
+            document.getElementById('focus-icon').innerHTML = `<i class="fas ${sub.icon}"></i>`;
+            document.getElementById('focus-category').innerText = task.category;
+            document.getElementById('focus-title').innerText = task.title;
+            document.getElementById('focus-desc').innerText = task.description || "Complete this activity.";
+            
+            document.getElementById('focus-modal').classList.add('active');
+        },
+
+        completeTask: async () => {
+            if (!state.currentTask) return;
+            const task = state.currentTask;
+            const pts = task.points || 10;
+            
+            const newPoints = (state.data.points || 0) + pts;
+            const newTasks = state.data.tasks.map(t => {
+                if (t.id === task.id) return { ...t, completed: true };
+                return t;
+            });
+
+            await updateDoc(doc(db, 'artifacts', state.appId, 'public', 'data', 'daily_logs', state.dateStr), {
+                points: newPoints,
+                tasks: newTasks
+            });
+
+            app.closeModal('focus-modal');
+            app.triggerConfetti();
+        },
+
+        addTask: async () => {
+            const sub = document.getElementById('new-task-subject').value;
+            const cat = document.getElementById('new-task-category').value;
+            const title = document.getElementById('new-task-title').value;
+            const desc = document.getElementById('new-task-desc').value;
+
+            if (!title) return alert("Title required");
 
             const newTask = {
-                id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-                category: newTaskCategory,
-                title: newTaskTitle,
-                description: newTaskDesc,
-                subjectId: newTaskSubject
+                id: Date.now().toString(),
+                subject: sub,
+                category: cat,
+                title: title,
+                description: desc,
+                completed: false,
+                points: 10
             };
 
-            const updatedTasks = { ...data.customTasks };
-            if (!updatedTasks[newTaskSubject]) updatedTasks[newTaskSubject] = [];
-            updatedTasks[newTaskSubject] = [...updatedTasks[newTaskSubject], newTask];
-
-            const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
-            await updateDoc(logRef, { customTasks: updatedTasks });
-            setNewTaskTitle(""); // Clear title
-            setNewTaskDesc(""); // Clear desc
-          };
-
-          const deleteTask = async (subId, taskId) => {
-             if(!confirm("Remove this task?")) return;
-             const updatedTasks = { ...data.customTasks };
-             updatedTasks[subId] = updatedTasks[subId].filter(t => t.id !== taskId);
-             
-             // Also remove completion status
-             const updates = { customTasks: updatedTasks };
-             updates[taskId] = deleteField();
-             updates[`${taskId}_time`] = deleteField();
-             updates[`${taskId}_flagged`] = deleteField();
-
-             const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
-             await updateDoc(logRef, updates);
-          };
-
-          const deleteEntireLog = async () => {
-              if(!confirm("WARNING: This will permanently delete the entire log for " + dateStr + ". Are you sure?")) return;
-              const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
-              await deleteDoc(logRef);
-              alert("Log deleted. The view will reset automatically.");
-              // REMOVED RELOAD TO PREVENT KICKING BACK TO STUDENT VIEW
-              // The onSnapshot listener will detect the deletion and re-initialize a blank day.
-          };
-
-          const completeTask = async (taskObj) => {
-            if (!user) return;
-            if (data[taskObj.id]) return; 
-            
-            const pointValue = calculatePoints(taskObj.category);
-            const newPoints = (data.points || 0) + pointValue;
-            
-            const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
-            const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
-            const logEntry = {
-                type: 'completion',
-                task: `${taskObj.category}: ${taskObj.title || taskObj.description}`,
-                subject: taskObj.subjectId,
-                points: pointValue,
-                time: timeString,
-                id: Date.now() 
-            };
-            const currentLog = data.activityLog || [];
-            
-            await updateDoc(logRef, { 
-                [taskObj.id]: true, 
-                [`${taskObj.id}_flagged`]: deleteField(),
-                points: newPoints,
-                [`${taskObj.id}_time`]: timeString,
-                activityLog: [...currentLog, logEntry]
+            const currentTasks = state.data.tasks || [];
+            await updateDoc(doc(db, 'artifacts', state.appId, 'public', 'data', 'daily_logs', state.dateStr), {
+                tasks: [...currentTasks, newTask]
             });
-            triggerConfetti();
-            setTimeout(() => { setFocusTask(null); }, 1000);
-          };
 
-          const flagTask = async (taskObj) => {
-              if(!user) return;
-              const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
-              await updateDoc(logRef, {
-                  [`${taskObj.id}_flagged`]: true,
-                  [taskObj.id]: false 
-              });
-              setFocusTask(null); 
-          };
+            document.getElementById('new-task-title').value = '';
+            document.getElementById('new-task-desc').value = '';
+            alert("Task Added");
+        },
 
-          const resolveFlag = async (taskObj, action) => {
-              const points = calculatePoints(taskObj.category);
-              const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
-              
-              if (action === 'approve') {
-                  const newPoints = (data.points || 0) + points;
-                  const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                  const logEntry = {
-                    type: 'completion',
-                    task: `${taskObj.category}: ${taskObj.title || taskObj.description}`,
-                    subject: taskObj.subjectId,
-                    points: points,
-                    time: timeString + " (Resolved)",
-                    id: Date.now()
-                  };
-                  const currentLog = data.activityLog || [];
-                  await updateDoc(logRef, {
-                      [taskObj.id]: true,
-                      [`${taskObj.id}_flagged`]: deleteField(),
-                      points: newPoints,
-                      [`${taskObj.id}_time`]: timeString,
-                      activityLog: [...currentLog, logEntry]
-                  });
-              } else {
-                  await updateDoc(logRef, { [`${taskObj.id}_flagged`]: deleteField() });
-              }
-          };
-
-          const handleRejectTask = async () => {
-            if (!user || !rejectModal) return;
-            if (!rejectReason.trim()) {
-                alert("Please enter a reason/feedback for the rejection.");
-                return;
+        resetDay: async () => {
+            if(confirm("Reset points and tasks?")) {
+                await updateDoc(doc(db, 'artifacts', state.appId, 'public', 'data', 'daily_logs', state.dateStr), {
+                    points: 0,
+                    tasks: (state.data.tasks || []).map(t => ({...t, completed: false}))
+                });
             }
+        },
 
-            const { taskObj } = rejectModal;
-            
-            const deduction = parseInt(deductionAmount) || 0;
-            const newPoints = (data.points || 0) - deduction;
-            
-            const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr);
-            
-            const logEntry = {
-                type: 'deduction',
-                task: `${taskObj.category}: ${taskObj.title || taskObj.description}`,
-                subject: taskObj.subjectId,
-                points: -deduction,
-                reason: rejectReason,
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            };
+        triggerConfetti: () => {
+            const colors = ['#FF2E63', '#00F5D4', '#FF9F1C', '#00C2FF'];
+            for (let i = 0; i < 50; i++) {
+                const conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.left = Math.random() * 100 + '%';
+                conf.style.top = -10 + '%';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                document.body.appendChild(conf);
+                setTimeout(() => conf.remove(), 4000);
+            }
+        },
 
-            const currentLog = data.activityLog || [];
+        showPinEntry: () => {
+            document.getElementById('pin-modal').classList.add('active');
+        },
 
-            await updateDoc(logRef, { 
-                [taskObj.id]: false, 
-                [`${taskObj.id}_flagged`]: deleteField(), 
-                points: newPoints,
-                activityLog: [...currentLog, logEntry],
-                latestAlert: {
-                    id: Date.now(),
-                    type: 'deduction',
-                    amount: -deduction,
-                    message: rejectReason,
-                    task: taskObj.description,
-                    subjectId: taskObj.subjectId,
-                    timestamp: new Date().toISOString()
-                }
-            });
+        toggleLog: () => {
+            alert("History feature simplified for layout.");
+        },
 
-            setRejectModal(null);
-            setRejectReason("");
-            setDeductionAmount(0);
-          };
-
-          const handlePinSubmit = () => {
-            const correctPin = settings.parent_pin || "1234";
-            if (pinInput === correctPin) {
-              setViewMode('parent');
-              setPinInput("");
+        verifyPin: () => {
+            const val = document.getElementById('pin-input').value;
+            if (val === "1234") {
+                app.closeModal('pin-modal');
+                document.getElementById('subject-view').style.display = 'none';
+                document.getElementById('task-view').style.display = 'none';
+                document.getElementById('parent-view').style.display = 'flex';
+                document.getElementById('pin-input').value = '';
             } else {
-              alert("Incorrect PIN");
-              setPinInput("");
+                alert("Incorrect PIN");
             }
-          };
+        },
 
-          const startFocusTask = (taskObj) => {
-              const sub = SUBJECTS.find(s => s.id === taskObj.subjectId);
-              setFocusTask({ ...taskObj, icon: sub.icon, points: calculatePoints(taskObj.category) });
-          };
+        closeModal: (id) => {
+            document.getElementById(id).classList.remove('active');
+        },
 
-          const renderFocusContent = () => {
-              if (!focusTask) return null;
-              const cat = focusTask.category;
-              
-              if (cat === "Video") {
-                   return (<div className="w-full bg-indigo-50 border-2 border-indigo-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><PlayCircle className="w-16 h-16 text-indigo-500" /></div><h3 className="text-2xl font-black text-indigo-900">Watch & Learn</h3><p className="text-indigo-700 font-medium text-xl">1. Put on your headphones.<br/>2. Watch the whole video.<br/>3. Don't skip parts.</p></div>);
-              }
-              if (cat === "Science Experiment" || cat === "Experiment") {
-                   return (<div className="w-full bg-emerald-50 border-2 border-emerald-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><FlaskConical className="w-16 h-16 text-emerald-600" /></div><h3 className="text-2xl font-black text-emerald-900">Science Time</h3><p className="text-emerald-700 font-medium text-xl">Follow the steps carefully.<br/>Write down what you see.</p></div>);
-              }
-              if (cat === "Map Activity") {
-                   return (<div className="w-full bg-purple-50 border-2 border-purple-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><Globe2 className="w-16 h-16 text-purple-600" /></div><h3 className="text-2xl font-black text-purple-900">Map Skills</h3><p className="text-purple-700 font-medium text-xl">Look at the key/legend.<br/>Find the places on the list.</p></div>);
-              }
-              if (cat === "Reading" || cat === "Writing Assignment" || cat === "Vocabulary" || cat === "Essay" || cat === "Journal Entry") {
-                  return (<div className="w-full bg-yellow-50 border-2 border-yellow-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><BookOpen className="w-16 h-16 text-yellow-600" /></div><h3 className="text-2xl font-black text-yellow-900">Focus on Words</h3><p className="text-yellow-700 font-medium text-xl">Read slowly.<br/>Check your spelling.</p></div>);
-              }
-              if (cat === "Quiz" || cat === "Math Problems") {
-                  return (<div className="w-full bg-red-50 border-2 border-red-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><Target className="w-16 h-16 text-red-600" /></div><h3 className="text-2xl font-black text-red-900">Quiz Mode</h3><p className="text-red-700 font-medium text-xl">Take a deep breath.<br/>Read every question twice.</p></div>);
-              }
-              
-              return (<div className="w-full bg-blue-50 border-2 border-blue-200 rounded-3xl p-8 text-center space-y-4"><div className="flex justify-center mb-2"><ClipboardCheck className="w-16 h-16 text-blue-500" /></div><h3 className="text-2xl font-black text-blue-900">Let's Work!</h3><p className="text-blue-700 font-medium text-xl">Focus on this one task.<br/>Raise your hand if stuck.</p></div>);
-          };
-
-          if (loading || authError) {
-              return (
-                  <div className="min-h-screen flex flex-col items-center justify-center bg-red-50 p-6 text-center">
-                      {authError ? (
-                          <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md border-2 border-red-200">
-                              <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                              <h2 className="text-2xl font-black text-slate-800 mb-2">Configuration Error</h2>
-                              <p className="text-slate-600 mb-6 font-medium">We couldn't connect to your Firebase database.</p>
-                              <div className="bg-slate-100 p-4 rounded-xl text-left text-xs font-mono text-slate-600 mb-6 overflow-x-auto">{authError}</div>
-                              <div className="text-sm text-slate-500"><strong>How to fix:</strong><br/>1. Go to Firebase Console {'>'} Authentication.<br/>2. Click "Sign-in method" tab.<br/>3. Enable <strong>Anonymous</strong> provider.<br/>4. Go to Firestore Database {'>'} Rules and ensure they allow read/write.</div>
-                          </div>
-                      ) : ( <div className="text-blue-500 font-bold text-lg animate-pulse">Loading Gabriel's Space...</div> )}
-                  </div>
-              );
-          }
-
-          if (viewMode === 'pin_entry') {
-            return (
-              <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-                <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center">
-                  <div className="mx-auto w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-6"><Lock className="w-8 h-8 text-slate-700" /></div>
-                  <h2 className="text-2xl font-black text-slate-800 mb-2">Parent Access</h2>
-                  <p className="text-slate-500 mb-6">Enter your 4-digit PIN.</p>
-                  <input type="password" maxLength={4} value={pinInput} onChange={(e) => setPinInput(e.target.value)} className="w-full text-center text-4xl font-bold tracking-[1em] border-b-4 border-slate-200 py-4 mb-8 outline-none focus:border-blue-500 transition-colors text-slate-800" autoFocus />
-                  <div className="flex flex-col gap-3">
-                    <button onClick={handlePinSubmit} className="w-full py-4 bg-slate-800 text-white rounded-xl font-bold text-lg hover:bg-slate-700 transition-all btn-press">Unlock Mode</button>
-                    <button onClick={() => setViewMode('student')} className="w-full py-4 bg-slate-100 text-slate-600 rounded-xl font-bold text-lg hover:bg-slate-200 transition-all">Cancel</button>
-                  </div>
-                </div>
-              </div>
-            );
-          }
-
-          if (viewMode === 'parent') {
-            return (
-              <div className="min-h-screen bg-slate-100 text-slate-800 pb-20">
-                <header className="bg-slate-800 text-white p-4 shadow-lg sticky top-0 z-50">
-                  <div className="max-w-4xl mx-auto flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-blue-500 p-2 rounded-lg"><UserCog className="w-6 h-6" /></div>
-                      <div><h1 className="text-xl font-bold">Parent Dashboard</h1><p className="text-xs text-slate-400">Managing: {STUDENT_NAME}</p></div>
-                    </div>
-                    <button onClick={() => setViewMode('student')} className="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg font-bold text-sm transition-colors border border-slate-600">Exit to Student Mode</button>
-                  </div>
-                </header>
-
-                <main className="max-w-4xl mx-auto p-6 space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
-                      <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Viewing Date</label>
-                            <input type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)} className="font-bold text-lg text-slate-800 outline-none"/>
-                          </div>
-                          {new Date(dateStr) > new Date() && (
-                              <span className="bg-orange-100 text-orange-600 text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-wide">Planning Future</span>
-                          )}
-                      </div>
-                      <div className="flex gap-2">
-                          <button onClick={() => setDateStr(getLocalISODate())} className="text-xs bg-slate-100 text-slate-600 font-bold px-3 py-2 rounded-lg hover:bg-slate-200 transition-colors">Jump to Today</button>
-                          <button 
-                            onClick={() => {
-                                const tomorrow = new Date();
-                                tomorrow.setDate(tomorrow.getDate() + 1);
-                                setDateStr(getLocalISODate(tomorrow));
-                            }} 
-                            className="text-xs bg-indigo-100 text-indigo-600 font-bold px-3 py-2 rounded-lg hover:bg-indigo-200 transition-colors flex items-center gap-1"
-                          >
-                              <CalendarCheck className="w-3 h-3" /> Plan Tomorrow
-                          </button>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Set Daily Goal</label>
-                        <div className="flex items-center gap-2">
-                            <Target className="w-5 h-5 text-indigo-500" />
-                            <input type="number" value={newGoal} onChange={(e) => setNewGoal(e.target.value)} className="font-black text-2xl w-20 border-b-2 border-slate-200 outline-none focus:border-indigo-500"/>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                          <button onClick={updateDailyGoal} className="bg-slate-800 text-white font-bold px-4 py-2 rounded-xl text-sm">Save</button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-                      <div className="flex justify-between items-end mb-2">
-                        <span className="font-bold text-slate-500">Progress</span>
-                        <span className="font-black text-2xl text-slate-800">{data.points || 0} / <span className="text-slate-400">{data.dailyGoal || DEFAULT_GOAL}</span></span>
-                      </div>
-                      <div className="w-full h-4 bg-slate-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-green-500 transition-all duration-500" style={{ width: `${Math.min(100, ((data.points || 0) / (data.dailyGoal || DEFAULT_GOAL)) * 100)}%` }} />
-                      </div>
-                  </div>
-
-                  {/* Task Creator - Now Main Component */}
-                  <div className="bg-blue-50 p-6 rounded-3xl border-2 border-blue-100 shadow-sm">
-                        <h4 className="font-bold text-blue-900 mb-4 flex items-center gap-2 text-lg">
-                            <div className="bg-blue-200 p-2 rounded-lg text-blue-700"><Plus className="w-5 h-5"/></div> 
-                            Add New Task to Schedule
-                        </h4>
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-1">Subject</label>
-                                    <select className="w-full p-4 rounded-2xl border border-blue-200 bg-white font-bold text-slate-700 outline-none shadow-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all" value={newTaskSubject || ""} onChange={(e) => setNewTaskSubject(e.target.value)}>
-                                        <option value="" disabled>Select Subject...</option>
-                                        {SUBJECTS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-1">Category</label>
-                                    <select className="w-full p-4 rounded-2xl border border-blue-200 bg-white text-sm font-bold text-slate-700 outline-none shadow-sm focus:border-blue-400 transition-all" value={newTaskCategory} onChange={(e) => setNewTaskCategory(e.target.value)}>
-                                        {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label className="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-1">Title</label>
-                                <input type="text" placeholder="e.g. Chapter 4 Review" className="w-full p-4 rounded-2xl border border-blue-200 outline-none shadow-sm focus:border-blue-400 transition-all font-bold text-lg" value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} />
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-1">Description / Instructions</label>
-                                <input type="text" placeholder="e.g. Complete questions 1-10 on page 42" className="w-full p-4 rounded-2xl border border-blue-200 outline-none shadow-sm focus:border-blue-400 transition-all" value={newTaskDesc} onChange={(e) => setNewTaskDesc(e.target.value)} />
-                            </div>
-
-                            <button onClick={addTask} className="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl hover:bg-blue-700 shadow-lg shadow-blue-200 transform active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-lg">
-                                <Plus className="w-6 h-6" /> Add Task to Schedule
-                            </button>
-                        </div>
-                  </div>
-
-                  <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center gap-3">
-                      <ShieldCheck className="w-5 h-5 text-green-600" />
-                      <div>
-                          <h2 className="text-lg font-black text-slate-700">Assignments & Schedule</h2>
-                          <p className="text-sm text-slate-500">Manage daily tasks here.</p>
-                      </div>
-                    </div>
-                    <div className="divide-y divide-slate-100">
-                      {SUBJECTS.map(sub => {
-                        const isVisible = isSubjectVisible(sub.id);
-                        const progress = calculateSubjectProgress(sub);
-                        const subTasks = getSubjectTasks(sub.id);
-
-                        return (
-                          <div key={sub.id} className={`p-6 transition-colors ${isVisible ? 'hover:bg-slate-50' : 'bg-slate-50 opacity-60'}`}>
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-lg bg-gradient-to-br ${sub.color} text-slate-800`}>
-                                        {React.cloneElement(sub.icon, { className: "w-5 h-5" })}
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                                            {sub.label}
-                                            {!isVisible && <span className="text-[10px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full uppercase">Hidden</span>}
-                                        </h3>
-                                        <div className="text-xs font-bold text-slate-400">{progress}% Completed</div>
-                                    </div>
-                                </div>
-                                <button 
-                                    onClick={() => toggleSubjectVisibility(sub.id)} 
-                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                    title={isVisible ? "Hide Subject from Student" : "Show Subject to Student"}
-                                >
-                                    {isVisible ? <Eye className="w-5 h-5"/> : <EyeOff className="w-5 h-5"/>}
-                                </button>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                              {subTasks.map(task => {
-                                const isDone = data[task.id];
-                                const isFlagged = data[`${task.id}_flagged`];
-                                const timestamp = data[`${task.id}_time`]; 
-                                const points = calculatePoints(task.category); 
-
-                                let bgClass = 'bg-white border-slate-200';
-                                if (isDone) bgClass = 'bg-green-50 border-green-300 shadow-sm';
-                                else if (isFlagged) bgClass = 'bg-yellow-50 border-yellow-300 shadow-sm';
-                                else bgClass = 'bg-white border-slate-200 opacity-70';
-
-                                return (
-                                  <div key={task.id} className={`p-3 rounded-xl border flex flex-col justify-between gap-3 select-none transition-all ${bgClass} group relative`}>
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex items-start gap-2">
-                                            <div className={`mt-1 w-6 h-6 rounded flex items-center justify-center border transition-colors ${isDone ? 'bg-green-500 border-green-500' : isFlagged ? 'bg-yellow-400 border-yellow-400' : 'bg-white border-slate-300'}`}>
-                                                {isDone && <CheckCircle2 className="w-4 h-4 text-white" />}
-                                                {isFlagged && <HelpCircle className="w-4 h-4 text-white" />}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <span className="text-xs font-bold text-slate-400 uppercase">{task.category}</span>
-                                                {task.title && <div className="font-black text-slate-800 text-sm truncate">{task.title}</div>}
-                                                <div className={`text-xs font-medium block leading-tight ${isDone ? 'text-green-800' : isFlagged ? 'text-yellow-800' : 'text-slate-500'}`}>
-                                                    {task.description}
-                                                </div>
-                                                <div className="flex flex-wrap gap-2 text-[10px] font-bold mt-1">
-                                                    <span className="uppercase text-slate-400">{points} PTS</span>
-                                                    {isDone && timestamp && <span className="text-blue-500">@{timestamp}</span>}
-                                                    {isFlagged && <span className="text-yellow-600 uppercase">NEEDS HELP</span>}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="flex items-center justify-end gap-2 border-t border-slate-100/50 pt-2 mt-auto">
-                                            {/* Always show delete button in Parent Mode */}
-                                            <button onClick={() => deleteTask(sub.id, task.id)} className="bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 p-2 rounded-lg transition-colors" title="Delete Task">
-                                                <Trash2 className="w-3 h-3" />
-                                            </button>
-
-                                            {isDone && (
-                                                <button onClick={() => { setRejectModal({ taskObj: task }); setDeductionAmount(points); }} className="bg-red-100 hover:bg-red-200 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors">
-                                                    <ThumbsDown className="w-3 h-3" /> Reject
-                                                </button>
-                                            )}
-                                            
-                                            {isFlagged && (
-                                                <div className="flex gap-1">
-                                                    <button onClick={() => resolveFlag(task, 'approve')} className="bg-green-100 text-green-700 p-2 rounded-lg hover:bg-green-200" title="Mark Done (Award Points)">
-                                                        <Check className="w-4 h-4" />
-                                                    </button>
-                                                    <button onClick={() => { setRejectModal({ taskObj: task }); setDeductionAmount(0); }} className="bg-red-100 text-red-600 p-2 rounded-lg hover:bg-red-200" title="Reject Help Request">
-                                                        <ThumbsDown className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            )}
-                                    </div>
-                                  </div>
-                                )
-                              })}
-                              {subTasks.length === 0 && <p className="text-xs text-slate-400 italic p-2">No tasks assigned yet.</p>}
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center gap-3">
-                      <History className="w-5 h-5 text-indigo-600" />
-                      <h2 className="text-lg font-black text-slate-700">Daily Log History</h2>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left">
-                            <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-xs">
-                                <tr>
-                                    <th className="px-6 py-3">Date</th>
-                                    <th className="px-6 py-3">Score</th>
-                                    <th className="px-6 py-3">Goal</th>
-                                    <th className="px-6 py-3">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {history.length === 0 ? (
-                                    <tr><td colSpan="4" className="px-6 py-8 text-center text-slate-400">No logs found yet.</td></tr>
-                                ) : (
-                                    history.map((log) => (
-                                        <tr key={log.date} className="hover:bg-slate-50">
-                                            <td className="px-6 py-4 font-bold text-slate-800">
-                                                {new Date(log.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className="bg-blue-100 text-blue-700 font-bold px-3 py-1 rounded-full">{log.points || 0}</span>
-                                            </td>
-                                            <td className="px-6 py-4 font-medium text-slate-500">
-                                                {log.dailyGoal || DEFAULT_GOAL}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <button onClick={() => setViewingHistoryLog(log)} className="text-indigo-600 font-bold hover:underline flex items-center gap-1"><List className="w-4 h-4"/> Details</button>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                  </div>
-
-                  <div className="border-t pt-8 mt-8 flex flex-col gap-4">
-                      <button onClick={async () => { if(confirm("Reset today's points and progress?")) { const logRef = doc(db, 'artifacts', appId, 'public', 'data', DATA_COLLECTION, dateStr); await updateDoc(logRef, { points: 0, activityLog: [] }); } }} className="text-orange-500 font-bold text-sm flex items-center gap-2 hover:text-orange-700 self-start">
-                        <RotateCcw className="w-4 h-4" /> Reset Today's Points
-                      </button>
-
-                      <button onClick={deleteEntireLog} className="text-red-500 font-bold text-sm flex items-center gap-2 hover:text-red-700 self-start border border-red-200 bg-red-50 px-4 py-2 rounded-lg">
-                        <Trash2 className="w-4 h-4" /> DELETE ENTIRE LOG FOR {dateStr}
-                      </button>
-                  </div>
-                </main>
-
-                {viewingHistoryLog && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                        <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setViewingHistoryLog(null)} />
-                        <div className="bg-white rounded-3xl w-full max-w-lg p-6 relative z-10 shadow-2xl max-h-[80vh] overflow-hidden flex flex-col">
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-black text-slate-800">Activity Log</h3>
-                                <button onClick={() => setViewingHistoryLog(null)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200"><X className="w-5 h-5"/></button>
-                            </div>
-                            <div className="overflow-y-auto flex-1 space-y-4 pr-2">
-                                {viewingHistoryLog.activityLog && viewingHistoryLog.activityLog.length > 0 ? (
-                                    viewingHistoryLog.activityLog.map((entry, idx) => (
-                                        <div key={idx} className={`p-4 rounded-xl border-l-4 ${entry.type === 'deduction' ? 'bg-red-50 border-red-500' : 'bg-green-50 border-green-500'}`}>
-                                            <div className="flex justify-between items-start mb-1">
-                                                <span className="font-bold text-slate-800">{entry.task}</span>
-                                                <span className="text-xs font-mono text-slate-400">{entry.time}</span>
-                                            </div>
-                                            <div className="text-sm flex items-center gap-2">
-                                                <span className={`font-black ${entry.type === 'deduction' ? 'text-red-600' : 'text-green-600'}`}>
-                                                    {entry.points > 0 ? '+' : ''}{entry.points} PTS
-                                                </span>
-                                                {entry.reason && <span className="text-slate-600 italic">- "{entry.reason}"</span>}
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-center text-slate-400 py-10">No detailed activity recorded for this day.</p>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {rejectModal && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                        <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setRejectModal(null)} />
-                        <div className="bg-white rounded-2xl w-full max-w-sm p-6 relative z-10 shadow-2xl animate-in fade-in zoom-in duration-200">
-                            <h3 className="text-xl font-black text-slate-800 mb-2">Reject Task</h3>
-                            <p className="text-sm text-slate-500 mb-4">You are returning: <span className="font-bold">{rejectModal.taskObj.description}</span></p>
-                            
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Points to Deduct</label>
-                            <input 
-                                type="number" 
-                                min="0" 
-                                value={deductionAmount} 
-                                onChange={(e) => setDeductionAmount(e.target.value)} 
-                                className="w-full p-3 border border-slate-200 rounded-xl mb-4 outline-none focus:border-red-400 font-bold text-lg"
-                            />
-
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Reason / Feedback (Required)</label>
-                            <input 
-                                type="text" 
-                                autoFocus 
-                                placeholder="e.g. Incomplete work..." 
-                                value={rejectReason} 
-                                onChange={(e) => setRejectReason(e.target.value)} 
-                                className="w-full p-3 border border-slate-200 rounded-xl mb-6 outline-none focus:border-red-400"
-                            />
-                            
-                            <div className="flex gap-3">
-                                <button onClick={() => setRejectModal(null)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200">Cancel</button>
-                                <button onClick={handleRejectTask} className="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 shadow-lg shadow-red-200">Confirm</button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-              </div>
-            );
-          }
-
-          // --- STUDENT VIEW (COMPACT) ---
-          return (
-            <div className="min-h-screen bg-pastel-gradient text-slate-700 pb-12 selection:bg-pink-200 flex flex-col items-center">
-              <Confetti active={showConfetti} />
-              
-              <div className="w-full max-w-3xl flex flex-col min-h-screen">
-                  <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-white/20 px-4 py-3 shadow-sm rounded-b-3xl mb-4 mx-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-lg shadow-indigo-200">
-                            <Gamepad2 className="w-6 h-6" />
-                          </div>
-                          <div>
-                            <h1 className="text-lg font-black text-slate-800 tracking-tight leading-none">Gabriel's Space</h1>
-                            <p className="text-xs font-bold text-slate-400">Let's learn!</p>
-                          </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                            <button onClick={handleDownloadPDF} className="p-2 bg-indigo-50 text-indigo-600 rounded-lg shadow-sm border border-indigo-100 hover:scale-105 transition-transform" title="Download Report">
-                             <FileDown className="w-5 h-5" />
-                            </button>
-                            
-                            <button onClick={() => setShowStudentLog(true)} className="p-2 bg-green-50 text-green-600 rounded-lg shadow-sm border border-green-100 hover:scale-105 transition-transform" title="My Log">
-                             <Clock className="w-5 h-5" />
-                            </button>
-
-                          <button onClick={() => setViewMode('pin_entry')} className="p-2 bg-white rounded-lg shadow-sm border border-slate-100 hover:scale-105 transition-transform">
-                            <Settings className="w-5 h-5 text-slate-400" />
-                          </button>
-                          
-                          <div className="flex items-center gap-2 bg-white pl-3 pr-1 py-1 rounded-xl shadow-sm border border-slate-100">
-                            <div className="text-right">
-                               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Progress</div>
-                               <div className="text-sm font-black text-slate-800 leading-none">{data.points || 0} / {data.dailyGoal || DEFAULT_GOAL}</div>
-                            </div>
-                            <div className="w-8 h-8 relative flex items-center justify-center">
-                               <svg className="w-full h-full transform -rotate-90">
-                                  <circle cx="16" cy="16" r="13" stroke="#f1f5f9" strokeWidth="3" fill="none" />
-                                  <circle cx="16" cy="16" r="13" stroke="#8b5cf6" strokeWidth="3" fill="none" strokeDasharray="81" strokeDashoffset={81 - (81 * Math.min(1, (data.points || 0) / (data.dailyGoal || DEFAULT_GOAL)))} strokeLinecap="round" className="transition-all duration-1000 ease-out" />
-                               </svg>
-                               <Trophy className="w-3 h-3 text-yellow-500 absolute" />
-                            </div>
-                          </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <main className="flex-1 p-4">
-                    {!selectedSubject && (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            {SUBJECTS.map((sub, index) => {
-                                if (!isSubjectVisible(sub.id)) return null;
-                                
-                                const progress = calculateSubjectProgress(sub);
-                                const isComplete = progress === 100;
-                                const subTasks = getSubjectTasks(sub.id);
-                                const visibleTaskCount = subTasks.length;
-                                
-                                return (
-                                    <button 
-                                       key={sub.id} 
-                                       onClick={() => setSelectedSubject(sub)}
-                                       className={`group relative bg-white rounded-2xl p-3 text-left border-b-4 transition-all hover:scale-[1.02] active:scale-[0.98] ${sub.borderColor} ${isComplete ? 'opacity-70' : ''} min-h-[110px] flex flex-col justify-between shadow-sm card-border border-transparent hover:border-slate-100`}
-                                       style={{ animationDelay: `${index * 50}ms` }}
-                                    >
-                                        <div className="flex justify-between items-start mb-1">
-                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br ${sub.color} text-slate-800 shadow-sm group-hover:shadow-md transition-shadow`}>
-                                                {React.cloneElement(sub.icon, { className: "w-5 h-5" })}
-                                            </div>
-                                            <div className={`text-[10px] font-black px-2 py-1 rounded-full ${isComplete ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
-                                                {isComplete ? 'DONE' : `${progress}%`}
-                                            </div>
-                                        </div>
-                                        
-                                        <div>
-                                            <h2 className="text-base font-black text-slate-800 leading-tight mb-0.5">{sub.label}</h2>
-                                            <p className="text-slate-400 font-bold text-[10px]">{visibleTaskCount} Activities</p>
-                                        </div>
-                                        
-                                        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mt-2">
-                                            <div className={`h-full bg-gradient-to-r ${sub.color}`} style={{ width: `${progress}%` }} />
-                                        </div>
-                                    </button>
-                                )
-                            })}
-                        </div>
-                    )}
-
-                    {selectedSubject && (
-                        <div className="animate-in fade-in zoom-in-95 duration-300">
-                            <div className="sticky top-20 z-30 mb-4">
-                                <button onClick={() => setSelectedSubject(null)} className="flex items-center gap-2 text-slate-700 font-black hover:text-slate-900 transition-colors bg-white/90 backdrop-blur border border-slate-200 px-4 py-3 rounded-2xl shadow-lg text-sm w-full sm:w-auto justify-center sm:justify-start">
-                                    <ArrowLeft className="w-5 h-5" /> Back to Dashboard
-                                </button>
-                            </div>
-                            
-                            <div className="bg-white rounded-[2rem] shadow-xl overflow-hidden border-2 border-slate-100 mx-auto">
-                                <div className={`p-6 bg-gradient-to-r ${selectedSubject.color}`}>
-                                    <div className="flex items-center gap-4 text-slate-900">
-                                        <div className="p-3 bg-white/50 backdrop-blur-sm rounded-2xl shadow-sm">
-                                            {React.cloneElement(selectedSubject.icon, { className: "w-8 h-8" })}
-                                        </div>
-                                        <div>
-                                            <h2 className="text-2xl font-black">{selectedSubject.label}</h2>
-                                            <p className="font-bold opacity-75 text-sm">Let's finish these tasks!</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div className="p-4 grid gap-3">
-                                    {getSubjectTasks(selectedSubject.id).map((task, i) => {
-                                        const isDone = data[task.id];
-                                        const timestamp = data[`${task.id}_time`]; 
-                                        const points = calculatePoints(task.category); 
-                                        const isFlagged = data[`${task.id}_flagged`];
-
-                                        let bgClass = 'bg-white border-slate-200';
-                                        if (isDone) bgClass = 'bg-green-50 border-green-300 shadow-sm';
-                                        else if (isFlagged) bgClass = 'bg-yellow-50 border-yellow-300 shadow-sm';
-                                        else bgClass = 'bg-white border-slate-200 opacity-70 hover:opacity-100';
-
-                                        return (
-                                            <div key={task.id} className={`p-4 rounded-2xl border-2 flex flex-col justify-between gap-3 select-none transition-all ${bgClass}`}>
-                                                <div className="flex items-start justify-between">
-                                                    <div className="flex items-start gap-3">
-                                                        <div className={`mt-1 w-8 h-8 rounded-xl flex items-center justify-center border-2 transition-colors ${isDone ? 'bg-green-500 border-green-500' : isFlagged ? 'bg-yellow-400 border-yellow-400' : 'bg-white border-slate-300'}`}>
-                                                            {isDone && <CheckCircle2 className="w-5 h-5 text-white" />}
-                                                            {isFlagged && <HelpCircle className="w-5 h-5 text-white" />}
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">{task.category}</span>
-                                                            {task.title && <div className="text-lg font-black text-slate-800 leading-tight mb-1">{task.title}</div>}
-                                                            <span className={`text-sm font-medium block leading-tight ${isDone ? 'text-green-800' : isFlagged ? 'text-yellow-800' : 'text-slate-600'}`}>
-                                                                {task.description}
-                                                            </span>
-                                                            <div className="flex flex-wrap gap-2 text-xs font-bold mt-1">
-                                                                <span className="uppercase text-slate-400">{points} PTS</span>
-                                                                {isDone && timestamp && <span className="text-blue-500">@{timestamp}</span>}
-                                                                {isFlagged && <span className="text-yellow-600 uppercase">NEEDS HELP</span>}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div className="flex items-center justify-end gap-2 border-t border-slate-100/50 pt-2 mt-auto">
-                                                    {!isDone && !isFlagged && (
-                                                        <button 
-                                                            onClick={() => startFocusTask(task)}
-                                                            className="text-sm font-bold text-white bg-indigo-500 hover:bg-indigo-600 py-2 px-4 rounded-xl flex items-center gap-1 shadow-sm shadow-indigo-200 btn-press"
-                                                        >
-                                                            Start <ChevronRight className="w-5 h-5"/>
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )
-                                    })}
-                                    {getSubjectTasks(selectedSubject.id).length === 0 && (
-                                        <div className="text-center p-8">
-                                            <p className="text-slate-400 font-bold">No tasks assigned for {selectedSubject.label} today.</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                  </main>
-
-                  {focusTask && (
-                      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
-                          <div className="bg-white rounded-[2.5rem] w-full max-w-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 border-4 border-white">
-                              <div className="bg-slate-50 border-b border-slate-100 p-6 flex justify-between items-center">
-                                  <div className="flex items-center gap-3">
-                                      {focusTask.icon}
-                                      <div>
-                                        <p className="text-xs font-bold text-slate-400 uppercase">{focusTask.category}</p>
-                                        <h2 className="text-xl font-black text-slate-800">{focusTask.title || focusTask.description}</h2>
-                                      </div>
-                                  </div>
-                                  <button onClick={() => setFocusTask(null)} className="p-2 bg-slate-200 rounded-full hover:bg-slate-300 transition-colors">
-                                      <X className="w-6 h-6 text-slate-600" />
-                                  </button>
-                              </div>
-                              
-                              <div className="p-8 flex flex-col items-center gap-8">
-                                  {focusTask.title && <p className="text-lg font-medium text-slate-600 text-center">{focusTask.description}</p>}
-                                  {renderFocusContent()}
-                                  
-                                  <div className="grid grid-cols-2 gap-4 w-full">
-                                      <button 
-                                        onClick={() => flagTask(focusTask)}
-                                        className="py-4 rounded-2xl bg-yellow-100 text-yellow-700 font-black text-lg hover:bg-yellow-200 hover:scale-[1.02] transition-all flex flex-col items-center justify-center gap-1 btn-press"
-                                      >
-                                        <HelpCircle className="w-8 h-8" />
-                                        <span>I Need Help</span>
-                                      </button>
-                                      
-                                      <button 
-                                        onClick={() => completeTask(focusTask)}
-                                        className="py-4 rounded-2xl bg-green-500 text-white font-black text-lg shadow-lg shadow-green-200 hover:bg-green-600 hover:scale-[1.02] transition-all flex flex-col items-center justify-center gap-1 btn-press"
-                                      >
-                                        <CheckCircle2 className="w-8 h-8" />
-                                        <span>I'm Done!</span>
-                                      </button>
-                                  </div>
-                              </div>
-                          </div>
-                      </div>
-                  )}
-
-                  {showStudentLog && (
-                      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setShowStudentLog(false)} />
-                          <div className="bg-white rounded-3xl w-full max-w-lg p-6 relative z-10 shadow-2xl max-h-[85vh] overflow-hidden flex flex-col">
-                              <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
-                                  <div className="flex items-center gap-3">
-                                      <div className="bg-green-100 p-2 rounded-xl text-green-600"><Clock className="w-6 h-6"/></div>
-                                      <div>
-                                          <h3 className="text-xl font-black text-slate-800">My Activity Log</h3>
-                                          <p className="text-xs text-slate-400 font-bold">{new Date(dateStr).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-                                      </div>
-                                  </div>
-                                  <button onClick={() => setShowStudentLog(false)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200"><X className="w-5 h-5"/></button>
-                              </div>
-                              <div className="overflow-y-auto flex-1 space-y-6 pr-2">
-                                  {SUBJECTS.map(sub => {
-                                      const subLogs = (data.activityLog || []).filter(l => l.subject === sub.id).reverse();
-                                      if (subLogs.length === 0) return null;
-                                      return (
-                                          <div key={sub.id}>
-                                              <div className="flex items-center gap-2 mb-2">
-                                                  <div className={`p-1.5 rounded-lg bg-gradient-to-br ${sub.color} text-slate-800`}>{React.cloneElement(sub.icon, { className: "w-4 h-4" })}</div>
-                                                  <h4 className="font-bold text-slate-700 text-sm uppercase">{sub.label}</h4>
-                                              </div>
-                                              <div className="space-y-2 pl-2 border-l-2 border-slate-100 ml-3">
-                                                  {subLogs.map((entry, idx) => (
-                                                      <div key={idx} className={`p-3 rounded-xl border-l-4 ml-2 text-sm ${entry.type === 'deduction' ? 'bg-red-50 border-red-400' : 'bg-green-50 border-green-400'}`}>
-                                                          <div className="flex justify-between items-start">
-                                                              <span className="font-bold text-slate-800">{entry.task}</span>
-                                                              <span className="text-[10px] font-mono text-slate-400">{entry.time}</span>
-                                                          </div>
-                                                          <div className="mt-1 flex flex-col gap-1">
-                                                              <span className={`text-xs font-black ${entry.type === 'deduction' ? 'text-red-600' : 'text-green-600'}`}>
-                                                                  {entry.points > 0 ? '+' : ''}{entry.points} Points
-                                                              </span>
-                                                              {entry.reason && (
-                                                                  <div className="bg-white/50 p-2 rounded-lg text-xs text-slate-600 italic border border-slate-100 mt-1">
-                                                                      "{entry.reason}"
-                                                                  </div>
-                                                              )}
-                                                          </div>
-                                                      </div>
-                                                  ))}
-                                              </div>
-                                          </div>
-                                      );
-                                  })}
-                                  {(!data.activityLog || data.activityLog.length === 0) && (
-                                      <div className="text-center py-10 text-slate-400">
-                                          <p>No activity recorded today.</p>
-                                      </div>
-                                  )}
-                              </div>
-                          </div>
-                      </div>
-                  )}
-
-                  {alertPopup && (
-                      <div className="fixed bottom-6 right-6 z-[60] max-w-sm w-full animate-in slide-in-from-right duration-500">
-                          <div className="bg-white rounded-2xl shadow-2xl border-l-8 border-red-500 p-6 relative overflow-hidden">
-                              <div className="absolute top-0 right-0 p-4 opacity-10">
-                                  <AlertCircle className="w-32 h-32 text-red-500" />
-                              </div>
-                              <div className="relative z-10">
-                                  <div className="flex items-start gap-4 mb-3">
-                                      <div className="bg-red-100 p-3 rounded-full">
-                                          <Megaphone className="w-6 h-6 text-red-600" />
-                                      </div>
-                                      <div>
-                                          <h3 className="text-lg font-black text-red-600">Teacher Alert!</h3>
-                                          <p className="font-bold text-slate-700 text-sm">Action Required</p>
-                                      </div>
-                                  </div>
-                                  <div className="bg-red-50 rounded-xl p-3 mb-4 border border-red-100">
-                                        <p className="text-slate-800 font-bold text-sm">"{alertPopup.message}"</p>
-                                        <p className="text-xs text-red-500 font-bold mt-1 uppercase tracking-wide">
-                                            Points Deducted: {alertPopup.amount}
-                                        </p>
-                                  </div>
-                                  <button 
-                                    onClick={() => setAlertPopup(null)}
-                                    className="w-full py-2 bg-slate-800 text-white font-bold rounded-lg text-sm hover:bg-slate-700"
-                                  >
-                                    Okay, I Understand
-                                  </button>
-                              </div>
-                          </div>
-                      </div>
-                  )}
-              </div>
-            </div>
-          );
+        generatePDF: () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(22);
+            doc.text("Gabriel's Progress Report", 20, 20);
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 30);
+            doc.text(`Total Points: ${state.data.points || 0}`, 20, 36);
+            
+            const rows = (state.data.tasks || []).map(t => [
+                t.title, 
+                SUBJECTS.find(s=>s.id===t.subject)?.label, 
+                t.completed ? "DONE" : "Pending", 
+                t.points
+            ]);
+            
+            doc.autoTable({
+                startY: 45,
+                head: [['Task', 'Subject', 'Status', 'Points']],
+                body: rows,
+                theme: 'grid',
+                headStyles: { fillColor: [45, 55, 72] }
+            });
+            doc.save(`Gabriel_Report_${state.dateStr}.pdf`);
         }
+    };
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+    // Start
+    window.app.init();
+</script>
+
 </body>
 </html>
-
